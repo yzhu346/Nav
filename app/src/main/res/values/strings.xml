@@ -1,0 +1,5 @@
+<resources>
+    <string name="app_name">Nav</string>
+    <string name="title_activity_maps">Map</string>
+    <string name="search_box">Enter a building name</string>
+</resources>
