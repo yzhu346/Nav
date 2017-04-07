@@ -10,8 +10,12 @@ import android.support.v4.content.ContextCompat;
 import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Button;
+import android.widget.EditText;
 import android.widget.RelativeLayout;
-
+import android.content.Intent;
+import android.app.SearchManager;
+import android.widget.TextView;
 
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
@@ -25,6 +29,8 @@ import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.maps.model.Polyline;
 import com.google.android.gms.maps.model.PolylineOptions;
+
+import static gatech.nav.R.id.editText;
 
 
 public class MapsActivity extends FragmentActivity
@@ -50,8 +56,9 @@ public class MapsActivity extends FragmentActivity
     private static final String KEY_CAMERA_POSITION = "camera_position";
     private static final String KEY_LOCATION = "location";
 
-
-
+    EditText edit;
+    Button button;
+    EditText edit2;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -72,12 +79,19 @@ public class MapsActivity extends FragmentActivity
                     .addApi(LocationServices.API)
                     .build();
         }
+        edit = (EditText)findViewById(R.id.editText);
+        button = (Button)findViewById(R.id.button2);
+        edit2 = (EditText)findViewById(R.id.editText2);
+    }
+    public void submit(View view)
+    {
+        String url = "http://m.gatech.edu/api/gtplaces/buildings/";
+        String userinput = edit.getText().toString();
+        edit2.setText(url + userinput, TextView.BufferType.EDITABLE);
     }
 
-
-
-
-    protected void onStart() {
+        protected void onStart
+    () {
         mGoogleApiClient.connect();
         super.onStart();
     }
@@ -107,7 +121,6 @@ public class MapsActivity extends FragmentActivity
                 .findFragmentById(R.id.map);
         mapView = mapFragment.getView();
         mapFragment.getMapAsync(this);
-
 
     }
 
@@ -164,12 +177,12 @@ public class MapsActivity extends FragmentActivity
             layoutParams.addRule(RelativeLayout.ALIGN_PARENT_BOTTOM, RelativeLayout.TRUE);
             layoutParams.setMargins(0, 0, 30, 30);
 
-            CompRlp.addRule(RelativeLayout.ALIGN_PARENT_TOP,0);
-            CompRlp.addRule(RelativeLayout.ALIGN_PARENT_TOP,RelativeLayout.TRUE);
-            CompRlp.setMargins(0,180,180,0);
+            CompRlp.addRule(RelativeLayout.ALIGN_PARENT_TOP, 0);
+            CompRlp.addRule(RelativeLayout.ALIGN_PARENT_TOP, RelativeLayout.TRUE);
+            CompRlp.setMargins(0, 180, 180, 0);
         }
 
-       // mMap.setOnMapLongClickListener(this);
+        // mMap.setOnMapLongClickListener(this);
 
         mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(mMyLocation, DEFAULT_ZOOM));
         mMap.setMapType(GoogleMap.MAP_TYPE_NORMAL);
@@ -262,9 +275,20 @@ public class MapsActivity extends FragmentActivity
             mLastLocation = null;
         }
     }
+/*
 
+    public void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.search);
 
-
+        // Get the intent, verify the action and get the query
+        Intent intent = getIntent();
+        if (Intent.ACTION_SEARCH.equals(intent.getAction())) {
+            String query = intent.getStringExtra(SearchManager.QUERY);
+            doMySearch(query);
+        }
+    }
+*/
 
 
 }
