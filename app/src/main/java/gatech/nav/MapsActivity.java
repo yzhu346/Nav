@@ -88,6 +88,8 @@ public class MapsActivity extends FragmentActivity
         String url = "http://m.gatech.edu/api/gtplaces/buildings/";
         String userinput = edit.getText().toString();
         edit2.setText(url + userinput, TextView.BufferType.EDITABLE);
+        String name = "David";
+        
     }
 
         protected void onStart
