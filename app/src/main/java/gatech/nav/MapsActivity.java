@@ -162,6 +162,8 @@ public class MapsActivity extends FragmentActivity
             mMarker.remove();
         }
         mMarker = mMap.addMarker(new MarkerOptions().position(point).title(point.toString()));
+        View button = findViewById(R.id.gobutton);
+        button.setVisibility(View.VISIBLE);
     }
 
     @Override
@@ -169,6 +171,8 @@ public class MapsActivity extends FragmentActivity
         if(mMarker != null){
             mMarker.remove();
         }
+        View button = findViewById(R.id.gobutton);
+        button.setVisibility(View.INVISIBLE);
     }
 
     public void onClickButton(View view){
@@ -215,6 +219,8 @@ public class MapsActivity extends FragmentActivity
                     mMarker.remove();
                 }
                 mMarker = mMap.addMarker(new MarkerOptions().position(buildingLatLng).title(name).snippet(address));
+                View button = findViewById(R.id.gobutton);
+                button.setVisibility(View.VISIBLE);
                 mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(buildingLatLng, 16));
             }
         }
