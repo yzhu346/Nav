@@ -1,5 +1,6 @@
 package gatech.nav;
 
+import android.content.Context;
 import android.content.pm.PackageManager;
 import android.location.Location;
 import android.support.annotation.NonNull;
@@ -7,7 +8,11 @@ import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.FragmentActivity;
 import android.os.Bundle;
 import android.support.v4.content.ContextCompat;
+import android.support.v4.view.MenuItemCompat;
 import android.util.Log;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
@@ -15,7 +20,13 @@ import android.widget.EditText;
 import android.widget.RelativeLayout;
 import android.content.Intent;
 import android.app.SearchManager;
+import android.widget.SearchView;
 import android.widget.TextView;
+import android.database.sqlite.SQLiteDatabase;
+import android.database.SQLException;
+
+
+import com.arlib.floatingsearchview.*;
 
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
@@ -30,7 +41,9 @@ import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.maps.model.Polyline;
 import com.google.android.gms.maps.model.PolylineOptions;
 
+/*
 import static gatech.nav.R.id.editText;
+*/
 
 
 public class MapsActivity extends FragmentActivity
@@ -55,14 +68,17 @@ public class MapsActivity extends FragmentActivity
     // Keys for storing activity state.
     private static final String KEY_CAMERA_POSITION = "camera_position";
     private static final String KEY_LOCATION = "location";
+    private FloatingSearchView mSearchView;
 
-    EditText edit;
+/*    EditText edit;
     Button button;
-    EditText edit2;
+    EditText edit2;*/
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_maps);
+
 
 
         // Retrieve location and camera position from saved instance state.
@@ -71,6 +87,15 @@ public class MapsActivity extends FragmentActivity
             mCameraPosition = savedInstanceState.getParcelable(KEY_CAMERA_POSITION);
         }*/
 
+        mSearchView.setOnQueryChangeListener(new FloatingSearchView.OnQueryChangeListener() {
+            @Override
+            public void onSearchTextChanged(String oldQuery, final String newQuery){
+
+                //get suggestions
+
+                mSearchView.swapSuggestions(newSuggestions);
+            }
+                                             });
 
         if (mGoogleApiClient == null) {
             mGoogleApiClient = new GoogleApiClient.Builder(this)
@@ -79,18 +104,40 @@ public class MapsActivity extends FragmentActivity
                     .addApi(LocationServices.API)
                     .build();
         }
-        edit = (EditText)findViewById(R.id.editText);
-        button = (Button)findViewById(R.id.button2);
-        edit2 = (EditText)findViewById(R.id.editText2);
+
     }
-    public void submit(View view)
+
+
+/*
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+
+        getMenuInflater().inflate(R.menu.options_menu, menu);
+
+        // Get the SearchView and set the searchable configuration
+        SearchManager searchManager = (SearchManager)getSystemService(Context.SEARCH_SERVICE);
+        SearchView searchView = (SearchView) menu.findItem(R.id.search).getActionView();
+        searchView.setSearchableInfo(searchManager.getSearchableInfo(getComponentName()));
+
+        // Do not iconify the widget;expand it by default
+        searchView.setIconifiedByDefault(false);
+        searchView.setIconifiedByDefault(true);
+        return true;
+    }
+*/
+
+
+
+
+/*    public void submit(View view)
     {
         String url = "http://m.gatech.edu/api/gtplaces/buildings/";
         String userinput = edit.getText().toString();
         edit2.setText(url + userinput, TextView.BufferType.EDITABLE);
         String name = "David";
-        
-    }
+
+    }*/
 
         protected void onStart
     () {
@@ -278,10 +325,9 @@ public class MapsActivity extends FragmentActivity
         }
     }
 /*
-
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.search);
+        setContentView(R.layout.);
 
         // Get the intent, verify the action and get the query
         Intent intent = getIntent();
@@ -289,8 +335,8 @@ public class MapsActivity extends FragmentActivity
             String query = intent.getStringExtra(SearchManager.QUERY);
             doMySearch(query);
         }
-    }
-*/
+    }*/
+
 
 
 }
