@@ -221,7 +221,7 @@ public class MapsActivity extends FragmentActivity
                 mMarker = mMap.addMarker(new MarkerOptions().position(buildingLatLng).title(name).snippet(address));
                 View button = findViewById(R.id.gobutton);
                 button.setVisibility(View.VISIBLE);
-                mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(buildingLatLng, 16));
+                mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(buildingLatLng, 16));
             }
         }
 
@@ -276,7 +276,7 @@ public class MapsActivity extends FragmentActivity
         mMap.setOnMapLongClickListener(this);
         mMap.setOnMapClickListener(this);
 
-        mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(mMyLocation, DEFAULT_ZOOM));
+        mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(mMyLocation, DEFAULT_ZOOM));
         mMap.setMapType(GoogleMap.MAP_TYPE_NORMAL);
 
 
