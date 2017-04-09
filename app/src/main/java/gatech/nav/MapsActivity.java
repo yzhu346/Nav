@@ -2,6 +2,7 @@ package gatech.nav;
 
 import android.content.pm.PackageManager;
 import android.location.Location;
+import android.os.AsyncTask;
 import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.FragmentActivity;
@@ -13,22 +14,37 @@ import android.view.ViewGroup;
 import android.widget.RelativeLayout;
 
 
+import com.arlib.floatingsearchview.FloatingSearchView;
+import com.arlib.floatingsearchview.suggestions.model.SearchSuggestion;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
-import com.google.android.gms.maps.model.CameraPosition;
 import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.location.LocationServices;
-import com.google.android.gms.maps.model.Polyline;
-import com.google.android.gms.maps.model.PolylineOptions;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
+
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.net.URLConnection;
+import java.util.ArrayList;
+import java.util.List;
 
 
 public class MapsActivity extends FragmentActivity
         implements OnMapReadyCallback,
+        GoogleMap.OnMapLongClickListener,
+        GoogleMap.OnMapClickListener,
         GoogleApiClient.ConnectionCallbacks,
         GoogleApiClient.OnConnectionFailedListener {
 
@@ -36,19 +52,22 @@ public class MapsActivity extends FragmentActivity
     private GoogleApiClient mGoogleApiClient;
     private static final String TAG = MapsActivity.class.getSimpleName();
 
-    private final LatLng mDefaultLocation = new LatLng(33.777301, -84.397908);
     private static final int DEFAULT_ZOOM = 15;
     private static final int PERMISSIONS_REQUEST_ACCESS_FINE_LOCATION = 1;
     private boolean mLocationPermissionGranted;
+    private Marker mMarker;
+    private String mSearchKey;
+    private List<SearchSuggestion> mSearchSuggestion = new ArrayList<>();
 
     private Location mLastLocation;
     private LatLng mMyLocation;
-    private CameraPosition mCameraPosition;
     private View mapView;
+    private FloatingSearchView mSearchView;
 
     // Keys for storing activity state.
-    private static final String KEY_CAMERA_POSITION = "camera_position";
-    private static final String KEY_LOCATION = "location";
+    private static final String DIRECTION_API_KEY = "AIzaSyCfH6jsTdZgxFXMyBkKcsBlBywGxq7UnnQ";
+
+
 
 
 
@@ -63,7 +82,6 @@ public class MapsActivity extends FragmentActivity
             mLastLocation = savedInstanceState.getParcelable(KEY_LOCATION);
             mCameraPosition = savedInstanceState.getParcelable(KEY_CAMERA_POSITION);
         }*/
-
 
         if (mGoogleApiClient == null) {
             mGoogleApiClient = new GoogleApiClient.Builder(this)
@@ -87,14 +105,6 @@ public class MapsActivity extends FragmentActivity
         super.onStop();
     }
 
-   /* @Override
-    protected void onSaveInstanceState(Bundle outState) {
-        if (mMap != null) {
-            outState.putParcelable(KEY_CAMERA_POSITION, mMap.getCameraPosition());
-            outState.putParcelable(KEY_LOCATION, mLastLocation);
-            super.onSaveInstanceState(outState);
-        }
-    }*/
 
     /**
      * Builds the map when the Google Play services client is successfully connected.
@@ -130,6 +140,86 @@ public class MapsActivity extends FragmentActivity
         Log.d(TAG, "Play services connection suspended");
     }
 
+    /**
+     * Add a marker on map after long click, remove any previously exist marker
+     * @param point
+     */
+    @Override
+    public void onMapLongClick(LatLng point) {
+        if (mMarker != null) {
+            mMarker.remove();
+        }
+        mMarker = mMap.addMarker(new MarkerOptions().position(point).title(point.toString()));
+        View button = findViewById(R.id.gobutton);
+        button.setVisibility(View.VISIBLE);
+    }
+
+    @Override
+    public void onMapClick(LatLng point){
+        if(mMarker != null){
+            mMarker.remove();
+        }
+        View button = findViewById(R.id.gobutton);
+        button.setVisibility(View.INVISIBLE);
+    }
+
+
+    private class buildingSearch extends AsyncTask<Void, Void, JsonArray> {
+        private String stringUrl = "http://m.gatech.edu/api/gtplaces/buildings/";
+
+
+        @Override
+        protected JsonArray doInBackground(Void...params) {
+            try{
+                URL url = new URL(stringUrl + mSearchKey);
+                URLConnection uc = url.openConnection();
+                uc.setRequestProperty("Accept", "text/html");
+                uc.connect();
+                JsonParser jp = new JsonParser();
+                JsonElement root = jp.parse(new InputStreamReader((InputStream) uc.getContent()));
+                JsonArray jsonArray = root.getAsJsonArray();
+                if(jsonArray.size() > 0)
+                    return jsonArray;
+                else
+                    return null;
+            } catch (MalformedURLException e){
+                Log.e("ERROR",e.getMessage(),e);
+                return null;
+            } catch (IOException e){
+                Log.e("ERROR",e.getMessage(),e);
+                return null;
+            }
+
+        }
+
+        @Override
+        protected void onPostExecute(JsonArray result) {
+            mSearchSuggestion.clear();
+            int s;
+
+            if (result != null) {
+                if(result.size()>5)
+                    s = 5;
+                else
+                    s = result.size();
+                for (int i = 0; i < s; i++) {
+                    JsonObject selectBuilding = result.get(i).getAsJsonObject();
+                    BuildingSuggestion buildingSuggestion = new BuildingSuggestion();
+                    buildingSuggestion.set(selectBuilding);
+                    mSearchSuggestion.add(buildingSuggestion);
+                }
+            }
+            mSearchView.swapSuggestions(mSearchSuggestion);
+        }
+
+        @Override
+        protected void onPreExecute(){
+
+        }
+
+    }
+
+
 
     /**
      * Manipulates the map once available.
@@ -146,10 +236,73 @@ public class MapsActivity extends FragmentActivity
 
         // Add a marker in Sydney and move the camera
         //LatLng sydney = new LatLng(-34, 151);
+        Log.d(TAG, "onSearchTextChanged()");
+
 
         updateLocationUI();
         getMyLocation();
+        initFindMyLocation();
 
+        mMap.setOnMapLongClickListener(this);
+        mMap.setOnMapClickListener(this);
+
+        mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(mMyLocation, DEFAULT_ZOOM));
+        mMap.setMapType(GoogleMap.MAP_TYPE_NORMAL);
+
+        mSearchView = (FloatingSearchView) findViewById(R.id.floating_search_view);
+        setSearchBar();
+
+        Express express = new Express();
+        express.draw_express(mMap);
+
+
+
+    }
+
+
+    private void setSearchBar(){
+        mSearchView.setOnQueryChangeListener(new FloatingSearchView.OnQueryChangeListener() {
+            @Override
+            public void onSearchTextChanged(String oldQuery, final String newQuery) {
+
+                if (!oldQuery.equals("") && newQuery.equals("")) {
+                    mSearchView.clearSuggestions();
+                } else {
+                    mSearchView.showProgress();
+                    mSearchKey = newQuery;
+                    new buildingSearch().execute();
+                    mSearchView.hideProgress();
+                }
+                //get suggestions based on newQuery
+
+
+                //pass them on to the search view
+               /* mSearchView.swapSuggestions(mSearchSuggestion);*/
+
+            }
+        });
+
+        mSearchView.setOnSearchListener(new FloatingSearchView.OnSearchListener() {
+                                            @Override
+                                            public void onSuggestionClicked(SearchSuggestion searchSuggestion) {
+                                                BuildingSuggestion buildingSuggestion = (BuildingSuggestion) searchSuggestion;
+                                                if(mMarker != null)
+                                                    mMarker.remove();
+                                                mMarker = mMap.addMarker(new MarkerOptions().position(buildingSuggestion.getLatLng()).title(buildingSuggestion.getBody()).snippet(buildingSuggestion.getAddress()));
+                                                View button = findViewById(R.id.gobutton);
+                                                button.setVisibility(View.VISIBLE);
+                                                mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(buildingSuggestion.getLatLng(), 16));
+                                            }
+
+                                            @Override
+                                            public void onSearchAction(String currentQuery) {
+
+                                            }
+                                        });
+
+    }
+
+    private void initFindMyLocation(){
         if (mapView != null &&
                 mapView.findViewById(Integer.parseInt("1")) != null) {
             // Get the button view
@@ -166,31 +319,11 @@ public class MapsActivity extends FragmentActivity
 
             CompRlp.addRule(RelativeLayout.ALIGN_PARENT_TOP,0);
             CompRlp.addRule(RelativeLayout.ALIGN_PARENT_TOP,RelativeLayout.TRUE);
-            CompRlp.setMargins(0,180,180,0);
+            CompRlp.setMargins(0,240,180,0);
         }
-
-       // mMap.setOnMapLongClickListener(this);
-
-        mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(mMyLocation, DEFAULT_ZOOM));
-        mMap.setMapType(GoogleMap.MAP_TYPE_NORMAL);
-
-        Express express = new Express();
-        express.draw_express(mMap);
-        /*ToggleButton express_toggle = (ToggleButton) findViewById(R.id.Exp);
-        express_toggle.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
-            @Override
-            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-                if (isChecked) {
-                    Express express = new Express();
-                    express.draw_express(mMap);
-                }
-            }
-        });*/
-
-
     }
 
-    public void getMyLocation() {
+    private void getMyLocation() {
         if (ContextCompat.checkSelfPermission(this.getApplicationContext(),
                 android.Manifest.permission.ACCESS_FINE_LOCATION)
                 == PackageManager.PERMISSION_GRANTED) {
@@ -262,9 +395,6 @@ public class MapsActivity extends FragmentActivity
             mLastLocation = null;
         }
     }
-
-
-
 
 
 }
