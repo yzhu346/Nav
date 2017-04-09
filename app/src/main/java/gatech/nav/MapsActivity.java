@@ -8,29 +8,24 @@ import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.FragmentActivity;
 import android.os.Bundle;
 import android.support.v4.content.ContextCompat;
-import android.text.Editable;
-import android.text.TextWatcher;
 import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.EditText;
 import android.widget.RelativeLayout;
-import android.widget.TextView;
 
 
+import com.arlib.floatingsearchview.FloatingSearchView;
+import com.arlib.floatingsearchview.suggestions.model.SearchSuggestion;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
-import com.google.android.gms.maps.model.CameraPosition;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.location.LocationServices;
-import com.google.android.gms.maps.model.Polyline;
-import com.google.android.gms.maps.model.PolylineOptions;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
@@ -42,6 +37,8 @@ import java.io.InputStreamReader;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLConnection;
+import java.util.ArrayList;
+import java.util.List;
 
 
 public class MapsActivity extends FragmentActivity
@@ -55,20 +52,20 @@ public class MapsActivity extends FragmentActivity
     private GoogleApiClient mGoogleApiClient;
     private static final String TAG = MapsActivity.class.getSimpleName();
 
-    private final LatLng mDefaultLocation = new LatLng(33.777301, -84.397908);
     private static final int DEFAULT_ZOOM = 15;
     private static final int PERMISSIONS_REQUEST_ACCESS_FINE_LOCATION = 1;
     private boolean mLocationPermissionGranted;
     private Marker mMarker;
+    private String mSearchKey;
+    private List<SearchSuggestion> mSearchSuggestion = new ArrayList<>();
 
     private Location mLastLocation;
     private LatLng mMyLocation;
-    private CameraPosition mCameraPosition;
     private View mapView;
+    private FloatingSearchView mSearchView;
 
     // Keys for storing activity state.
-    private static final String KEY_CAMERA_POSITION = "camera_position";
-    private static final String KEY_LOCATION = "location";
+    private static final String DIRECTION_API_KEY = "AIzaSyCfH6jsTdZgxFXMyBkKcsBlBywGxq7UnnQ";
 
 
 
@@ -85,7 +82,6 @@ public class MapsActivity extends FragmentActivity
             mLastLocation = savedInstanceState.getParcelable(KEY_LOCATION);
             mCameraPosition = savedInstanceState.getParcelable(KEY_CAMERA_POSITION);
         }*/
-
 
         if (mGoogleApiClient == null) {
             mGoogleApiClient = new GoogleApiClient.Builder(this)
@@ -109,14 +105,6 @@ public class MapsActivity extends FragmentActivity
         super.onStop();
     }
 
-   /* @Override
-    protected void onSaveInstanceState(Bundle outState) {
-        if (mMap != null) {
-            outState.putParcelable(KEY_CAMERA_POSITION, mMap.getCameraPosition());
-            outState.putParcelable(KEY_LOCATION, mLastLocation);
-            super.onSaveInstanceState(outState);
-        }
-    }*/
 
     /**
      * Builds the map when the Google Play services client is successfully connected.
@@ -175,19 +163,15 @@ public class MapsActivity extends FragmentActivity
         button.setVisibility(View.INVISIBLE);
     }
 
-    public void onClickButton(View view){
-        new buildingSearch().execute();
-    }
 
     private class buildingSearch extends AsyncTask<Void, Void, JsonArray> {
         private String stringUrl = "http://m.gatech.edu/api/gtplaces/buildings/";
-        EditText editText = (EditText) findViewById(R.id.editText);
-        private String key = editText.getText().toString();
+
 
         @Override
         protected JsonArray doInBackground(Void...params) {
             try{
-                URL url = new URL(stringUrl + key);
+                URL url = new URL(stringUrl + mSearchKey);
                 URLConnection uc = url.openConnection();
                 uc.setRequestProperty("Accept", "text/html");
                 uc.connect();
@@ -210,19 +194,22 @@ public class MapsActivity extends FragmentActivity
 
         @Override
         protected void onPostExecute(JsonArray result) {
+            mSearchSuggestion.clear();
+            int s;
+
             if (result != null) {
-                JsonObject firstBuilding = result.get(0).getAsJsonObject();
-                LatLng buildingLatLng = new LatLng(Double.parseDouble(firstBuilding.get("latitude").toString().substring(1,firstBuilding.get("latitude").toString().length()-1)),Double.parseDouble(firstBuilding.get("longitude").toString().substring(1,firstBuilding.get("longitude").toString().length()-1)));
-                String name = firstBuilding.get("name").toString().substring(1,firstBuilding.get("name").toString().length()-1);
-                String address = firstBuilding.get("address").toString().substring(1,firstBuilding.get("address").toString().length()-1);
-                if (mMarker != null) {
-                    mMarker.remove();
+                if(result.size()>5)
+                    s = 5;
+                else
+                    s = result.size();
+                for (int i = 0; i < s; i++) {
+                    JsonObject selectBuilding = result.get(i).getAsJsonObject();
+                    BuildingSuggestion buildingSuggestion = new BuildingSuggestion();
+                    buildingSuggestion.set(selectBuilding);
+                    mSearchSuggestion.add(buildingSuggestion);
                 }
-                mMarker = mMap.addMarker(new MarkerOptions().position(buildingLatLng).title(name).snippet(address));
-                View button = findViewById(R.id.gobutton);
-                button.setVisibility(View.VISIBLE);
-                mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(buildingLatLng, 16));
             }
+            mSearchView.swapSuggestions(mSearchSuggestion);
         }
 
         @Override
@@ -249,11 +236,73 @@ public class MapsActivity extends FragmentActivity
 
         // Add a marker in Sydney and move the camera
         //LatLng sydney = new LatLng(-34, 151);
-        System.out.println("system ready");
+        Log.d(TAG, "onSearchTextChanged()");
+
 
         updateLocationUI();
         getMyLocation();
+        initFindMyLocation();
 
+        mMap.setOnMapLongClickListener(this);
+        mMap.setOnMapClickListener(this);
+
+        mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(mMyLocation, DEFAULT_ZOOM));
+        mMap.setMapType(GoogleMap.MAP_TYPE_NORMAL);
+
+        mSearchView = (FloatingSearchView) findViewById(R.id.floating_search_view);
+        setSearchBar();
+
+        Express express = new Express();
+        express.draw_express(mMap);
+
+
+
+    }
+
+
+    private void setSearchBar(){
+        mSearchView.setOnQueryChangeListener(new FloatingSearchView.OnQueryChangeListener() {
+            @Override
+            public void onSearchTextChanged(String oldQuery, final String newQuery) {
+
+                if (!oldQuery.equals("") && newQuery.equals("")) {
+                    mSearchView.clearSuggestions();
+                } else {
+                    mSearchView.showProgress();
+                    mSearchKey = newQuery;
+                    new buildingSearch().execute();
+                    mSearchView.hideProgress();
+                }
+                //get suggestions based on newQuery
+
+
+                //pass them on to the search view
+               /* mSearchView.swapSuggestions(mSearchSuggestion);*/
+
+            }
+        });
+
+        mSearchView.setOnSearchListener(new FloatingSearchView.OnSearchListener() {
+                                            @Override
+                                            public void onSuggestionClicked(SearchSuggestion searchSuggestion) {
+                                                BuildingSuggestion buildingSuggestion = (BuildingSuggestion) searchSuggestion;
+                                                if(mMarker != null)
+                                                    mMarker.remove();
+                                                mMarker = mMap.addMarker(new MarkerOptions().position(buildingSuggestion.getLatLng()).title(buildingSuggestion.getBody()).snippet(buildingSuggestion.getAddress()));
+                                                View button = findViewById(R.id.gobutton);
+                                                button.setVisibility(View.VISIBLE);
+                                                mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(buildingSuggestion.getLatLng(), 16));
+                                            }
+
+                                            @Override
+                                            public void onSearchAction(String currentQuery) {
+
+                                            }
+                                        });
+
+    }
+
+    private void initFindMyLocation(){
         if (mapView != null &&
                 mapView.findViewById(Integer.parseInt("1")) != null) {
             // Get the button view
@@ -270,69 +319,11 @@ public class MapsActivity extends FragmentActivity
 
             CompRlp.addRule(RelativeLayout.ALIGN_PARENT_TOP,0);
             CompRlp.addRule(RelativeLayout.ALIGN_PARENT_TOP,RelativeLayout.TRUE);
-            CompRlp.setMargins(0,180,180,0);
+            CompRlp.setMargins(0,240,180,0);
         }
-
-        mMap.setOnMapLongClickListener(this);
-        mMap.setOnMapClickListener(this);
-
-        mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(mMyLocation, DEFAULT_ZOOM));
-        mMap.setMapType(GoogleMap.MAP_TYPE_NORMAL);
-
-
-
-        /*EditText editText = (EditText) findViewById(R.id.editText) ;
-        editText.addTextChangedListener(new TextWatcher() {
-            @Override
-            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
-
-            }
-
-            @Override
-            public void onTextChanged(CharSequence s, int start, int before, int count) {
-
-            }
-
-            @Override
-            public void afterTextChanged(Editable s) {
-                EditText editText = (EditText) findViewById(R.id.editText);
-                String key = editText.getText().toString();
-                try {
-
-                    if(buildingArray.size() > 0){
-                        JsonObject firstBuilding = buildingArray.get(0).getAsJsonObject();
-                        LatLng buildingLatLng = new LatLng(Double.parseDouble(firstBuilding.get("latitude").toString().substring(1,firstBuilding.get("latitude").toString().length()-1)),Double.parseDouble(firstBuilding.get("longitude").toString().substring(1,firstBuilding.get("longitude").toString().length()-1)));
-                        String name = firstBuilding.get("name").toString().substring(1,firstBuilding.get("name").toString().length()-1);
-                        String address = firstBuilding.get("address").toString().substring(1,firstBuilding.get("address").toString().length()-1);
-                        if (mMarker != null) {
-                            mMarker.remove();
-                        }
-                        mMarker = mMap.addMarker(new MarkerOptions().position(buildingLatLng).title(name).snippet(address));
-                    }
-                } catch (IOException e){
-                    e.printStackTrace();
-                }
-            }
-        });*/
-
-
-        Express express = new Express();
-        express.draw_express(mMap);
-        /*ToggleButton express_toggle = (ToggleButton) findViewById(R.id.Exp);
-        express_toggle.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
-            @Override
-            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-                if (isChecked) {
-                    Express express = new Express();
-                    express.draw_express(mMap);
-                }
-            }
-        });*/
-
-
     }
 
-    public void getMyLocation() {
+    private void getMyLocation() {
         if (ContextCompat.checkSelfPermission(this.getApplicationContext(),
                 android.Manifest.permission.ACCESS_FINE_LOCATION)
                 == PackageManager.PERMISSION_GRANTED) {
