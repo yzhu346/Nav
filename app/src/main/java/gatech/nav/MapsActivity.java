@@ -10,7 +10,6 @@ import android.support.v4.app.FragmentActivity;
 import android.os.Bundle;
 import android.support.v4.content.ContextCompat;
 import android.util.Log;
-import android.view.Menu;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.RelativeLayout;
@@ -28,7 +27,6 @@ import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.location.LocationServices;
-import com.google.android.gms.maps.model.Polyline;
 import com.google.android.gms.maps.model.PolylineOptions;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
@@ -269,10 +267,10 @@ public class MapsActivity extends FragmentActivity
         Route route = new Route();
         route.init();
         route.draw(mMap);
-        /*route.drawBetweenStop("express","87","techsqua_ib",mMap);*/
+        /*route.drawBetweenStop("trolley","marta_a","recctr",mMap);*/
 
         /*markerPoints = new ArrayList<LatLng>();*/
-        /*String url = getDirectionsUrl(new LatLng(33.77686,-84.38978),new LatLng(33.77521,-84.39612));
+        /*String url = getDirectionsUrl(new LatLng(33.7751,-84.40259),new LatLng(33.77335,-84.39917));
         DownloadTask downloadTask = new DownloadTask();
         downloadTask.execute(url);*/
 
@@ -298,11 +296,11 @@ public class MapsActivity extends FragmentActivity
             waypoints += point.latitude + "," + point.longitude + "|";
         }*/
 
-        LatLng point = new LatLng(33.775333, -84.392122);
+        /*LatLng point = new LatLng(33.782180, -84.391928);
         String waypoints = "waypoints=";
-        waypoints += point.latitude + "," + point.longitude + "|";
+        waypoints += point.latitude + "," + point.longitude + "|";*/
         // Building the parameters to the web service
-        String parameters = str_origin+"&"+str_dest+"&"+sensor+"&"+waypoints;
+        String parameters = str_origin+"&"+str_dest+"&"+sensor/*+"&"+waypoints*/;
 
         // Output format
         String output = "json";
