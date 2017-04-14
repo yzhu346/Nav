@@ -12,6 +12,7 @@ import android.support.v4.content.ContextCompat;
 import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Button;
 import android.widget.RelativeLayout;
 
 
@@ -23,10 +24,15 @@ import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
+import com.google.android.gms.maps.model.Dash;
+import com.google.android.gms.maps.model.Dot;
+import com.google.android.gms.maps.model.Gap;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.location.LocationServices;
+import com.google.android.gms.maps.model.PatternItem;
+import com.google.android.gms.maps.model.Polyline;
 import com.google.android.gms.maps.model.PolylineOptions;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
@@ -44,7 +50,9 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLConnection;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
 
 
@@ -65,7 +73,8 @@ public class MapsActivity extends FragmentActivity
     private Marker mMarker;
     private String mSearchKey;
     private ArrayList<SearchSuggestion> mSearchSuggestion = new ArrayList<>();
-    ArrayList<LatLng> markerPoints;
+    private Route mRoute = new Route();
+    private LinkedList<Polyline> mAllWalkingRoute = new LinkedList<Polyline>();
 
     private Location mLastLocation;
     private LatLng mMyLocation;
@@ -168,6 +177,13 @@ public class MapsActivity extends FragmentActivity
         if(mMarker != null){
             mMarker.remove();
         }
+        if(mAllWalkingRoute.size()>0) {
+            for (int i = 0; i < mAllWalkingRoute.size(); i++){
+                mAllWalkingRoute.get(i).remove();
+            }
+        }
+        mAllWalkingRoute.clear();
+        mRoute.draw(mMap);
         View button = findViewById(R.id.gobutton);
         button.setVisibility(View.INVISIBLE);
     }
@@ -261,12 +277,12 @@ public class MapsActivity extends FragmentActivity
         mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(mMyLocation, DEFAULT_ZOOM));
         mMap.setMapType(GoogleMap.MAP_TYPE_NORMAL);
 
-        mSearchView = (FloatingSearchView) findViewById(R.id.floating_search_view);
         setSearchBar();
+        setGoButton();
 
-        Route route = new Route();
-        route.init();
-        route.draw(mMap);
+        mRoute.init();
+        mRoute.draw(mMap);
+
         /*route.drawBetweenStop("trolley","marta_a","recctr",mMap);*/
 
         /*markerPoints = new ArrayList<LatLng>();*/
@@ -274,6 +290,38 @@ public class MapsActivity extends FragmentActivity
         DownloadTask downloadTask = new DownloadTask();
         downloadTask.execute(url);*/
 
+    }
+
+    private void setGoButton (){
+        Button button = (Button) findViewById(R.id.gobutton);
+        button.setOnClickListener(new View.OnClickListener(){
+            public void onClick(View v){
+                String start = "ferstdr";
+                String dest = "techsqua_ib";
+                String route_id = "trolley";
+                /*List<PatternItem> pattern = Arrays.<PatternItem>asList(
+                        new Dash(20), new Gap(20));*/
+
+                mRoute.drawBetweenStop(route_id,start,dest,mMap);
+                if(mAllWalkingRoute.size()>0) {
+                    for (int i = 0; i < mAllWalkingRoute.size(); i++){
+                        mAllWalkingRoute.get(i).remove();
+                    }
+                }
+                mAllWalkingRoute.clear();
+                drawWalkRoute(mMyLocation,mRoute.getStopLatLng(start,route_id));
+                drawWalkRoute(mRoute.getStopLatLng(dest,route_id),mMarker.getPosition());
+
+
+
+            }
+        });
+    }
+
+    private void drawWalkRoute(LatLng start, LatLng dest){
+        String url = getDirectionsUrl(start,dest);
+        DownloadTask downloadTask = new DownloadTask();
+        downloadTask.execute(url);
     }
 
     private String getDirectionsUrl(LatLng origin,LatLng dest){
@@ -286,6 +334,9 @@ public class MapsActivity extends FragmentActivity
 
         // Sensor enabled
         String sensor = "sensor=false";
+
+        //walking mode
+        String mode = "mode=walking";
 
         /*// Waypoints
         String waypoints = "";
@@ -300,7 +351,7 @@ public class MapsActivity extends FragmentActivity
         String waypoints = "waypoints=";
         waypoints += point.latitude + "," + point.longitude + "|";*/
         // Building the parameters to the web service
-        String parameters = str_origin+"&"+str_dest+"&"+sensor/*+"&"+waypoints*/;
+        String parameters = str_origin+"&"+str_dest+"&"+sensor + "&" + mode/*+"&"+waypoints*/;
 
         // Output format
         String output = "json";
@@ -433,15 +484,15 @@ public class MapsActivity extends FragmentActivity
 
                 // Adding all the points in the route to LineOptions
                 lineOptions.addAll(points);
-                lineOptions.width(2);
-                lineOptions.color(Color.RED);
-
-                if(i == 0) {
-                    for (int k = 0; k < points.size(); k++) {
-                        System.out.println("new LatLng(" + points.get(k).latitude + "," + points.get(k).longitude + "),");
-                    }
-                    mMap.addPolyline(lineOptions);
-                }
+                lineOptions.width(10);
+                lineOptions.color(Color.BLUE);
+                List<PatternItem> pattern = Arrays.<PatternItem>asList(
+                        new Dash(20), new Gap(20));
+               /* mWalkingRoute = mMap.addPolyline(mPolylineOptions);
+                mWalkingRoute.setPattern(pattern);*//*
+                //}*/
+                mAllWalkingRoute.add(mMap.addPolyline(lineOptions));
+                mAllWalkingRoute.get(mAllWalkingRoute.size()-1).setPattern(pattern);
             }
 
             // Drawing polyline in the Google Map for the i-th route
@@ -455,6 +506,7 @@ public class MapsActivity extends FragmentActivity
 
 
     private void setSearchBar(){
+        mSearchView = (FloatingSearchView) findViewById(R.id.floating_search_view);
         mSearchView.setOnQueryChangeListener(new FloatingSearchView.OnQueryChangeListener() {
             @Override
             public void onSearchTextChanged(String oldQuery, final String newQuery) {

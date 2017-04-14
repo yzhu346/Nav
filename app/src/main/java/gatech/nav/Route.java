@@ -1,6 +1,7 @@
 package gatech.nav;
 
 import android.graphics.Color;
+import android.graphics.RadialGradient;
 
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.model.Circle;
@@ -25,32 +26,32 @@ public class Route {
     private final int mGreen_Stop_Number = 17;
 
     private PolylineOptions[] Express = new PolylineOptions[mExpress_Stop_Number];
-    private Polyline[] Express_Polyline = new Polyline[mExpress_Stop_Number];
-    private Circle[] Express_Circle = new Circle[mExpress_Stop_Number];
+    private LinkedList<Polyline> Express_Polyline = new LinkedList<Polyline>();
+    private LinkedList<Circle> Express_Circle = new LinkedList<Circle>();
     private LinkedList<String> Express_stop = new LinkedList<>();
     private LinkedList<LatLng> Express_stop_position = new LinkedList<>();
 
     private PolylineOptions[] Trolley = new PolylineOptions[mTrolley_Stop_Number];
-    private Polyline[] Trolley_Polyline = new Polyline[mTrolley_Stop_Number];
-    private Circle[] Trolley_Circle = new Circle[mTrolley_Stop_Number];
+    private LinkedList<Polyline> Trolley_Polyline = new LinkedList<Polyline>();
+    private LinkedList<Circle> Trolley_Circle = new LinkedList<Circle>();
     private LinkedList<String> Trolley_stop = new LinkedList<>();
     private LinkedList<LatLng> Trolley_stop_position = new LinkedList<>();
 
     private PolylineOptions[] Blue = new PolylineOptions[mBlue_Stop_Number];
-    private Polyline[] Blue_Polyline = new Polyline[mBlue_Stop_Number];
-    private Circle[] Blue_Circle = new Circle[mBlue_Stop_Number];
+    private LinkedList<Polyline> Blue_Polyline = new LinkedList<Polyline>();
+    private LinkedList<Circle> Blue_Circle = new LinkedList<Circle>();
     private LinkedList<String> Blue_stop = new LinkedList<>();
     private LinkedList<LatLng> Blue_stop_position = new LinkedList<>();
 
     private PolylineOptions[] Red = new PolylineOptions[mRed_Stop_Number];
-    private Polyline[] Red_Polyline = new Polyline[mRed_Stop_Number];
-    private Circle[] Red_Circle = new Circle[mRed_Stop_Number];
+    private LinkedList<Polyline> Red_Polyline = new LinkedList<Polyline>();
+    private LinkedList<Circle> Red_Circle = new LinkedList<Circle>();
     private LinkedList<String> Red_stop = new LinkedList<>();
     private LinkedList<LatLng> Red_stop_position = new LinkedList<>();
 
     private PolylineOptions[] Green = new PolylineOptions[mGreen_Stop_Number];
-    private Polyline[] Green_Polyline = new Polyline[mGreen_Stop_Number];
-    private Circle[] Green_Circle = new Circle[mGreen_Stop_Number];
+    private LinkedList<Polyline> Green_Polyline = new LinkedList<Polyline>();
+    private LinkedList<Circle> Green_Circle = new LinkedList<Circle>();
     private LinkedList<String> Green_stop = new LinkedList<>();
     private LinkedList<LatLng> Green_stop_position = new LinkedList<>();
 
@@ -58,74 +59,149 @@ public class Route {
     private final int mSTOP_RADIUS = 6;
 
     public void draw(GoogleMap map){
+        clearAll();
         for(int i = 0; i < mExpress_Stop_Number ; i++){
-            Express_Polyline[i] = map.addPolyline(Express[i]);
-            Express_Circle[i] = map.addCircle(new CircleOptions()
+            Express_Polyline.add(map.addPolyline(Express[i]));
+            Express_Circle.add(map.addCircle(new CircleOptions()
                     .center(Express_stop_position.get(i))
                     .radius(mSTOP_RADIUS)
                     .strokeColor(Color.WHITE)
-                    .fillColor(android.graphics.Color.rgb(0x33,0x33,0x33)));
+                    .fillColor(android.graphics.Color.rgb(0x33,0x33,0x33))));
         }
 
         for(int i = 0; i < mTrolley_Stop_Number ; i++){
-            Trolley_Polyline[i] = map.addPolyline(Trolley[i]);
-            Trolley_Circle[i] = map.addCircle(new CircleOptions()
+            Trolley_Polyline.add(map.addPolyline(Trolley[i]));
+            Trolley_Circle.add(map.addCircle(new CircleOptions()
                     .center(Trolley_stop_position.get(i))
                     .radius(mSTOP_RADIUS)
                     .strokeColor(Color.WHITE)
-                    .fillColor(android.graphics.Color.rgb(0xff,0xcc,0x00)));
+                    .fillColor(android.graphics.Color.rgb(0xff,0xcc,0x00))));
         }
 
         for(int i = 0; i < mBlue_Stop_Number ; i++){
-            Blue_Polyline[i] = map.addPolyline(Blue[i]);
-            Blue_Circle[i] = map.addCircle(new CircleOptions()
+            Blue_Polyline.add(map.addPolyline(Blue[i]));
+            Blue_Circle.add(map.addCircle(new CircleOptions()
                     .center(Blue_stop_position.get(i))
                     .radius(mSTOP_RADIUS)
                     .strokeColor(Color.WHITE)
-                    .fillColor(android.graphics.Color.rgb(0x00,0x00,0xff)));
+                    .fillColor(android.graphics.Color.rgb(0x00,0x00,0xff))));
         }
 
         for(int i = 0; i < mRed_Stop_Number ; i++){
-            Red_Polyline[i] = map.addPolyline(Red[i]);
-            Red_Circle[i] = map.addCircle(new CircleOptions()
+            Red_Polyline.add(map.addPolyline(Red[i]));
+            Red_Circle.add(map.addCircle(new CircleOptions()
                     .center(Red_stop_position.get(i))
                     .radius(mSTOP_RADIUS)
                     .strokeColor(Color.WHITE)
-                    .fillColor(android.graphics.Color.rgb(0xff,0x11,0x00)));
+                    .fillColor(android.graphics.Color.rgb(0xff,0x11,0x00))));
         }
 
         for(int i = 0; i < mGreen_Stop_Number ; i++){
-            Green_Polyline[i] = map.addPolyline(Green[i]);
-            Green_Circle[i] = map.addCircle(new CircleOptions()
+            Green_Polyline.add(map.addPolyline(Green[i]));
+            Green_Circle.add(map.addCircle(new CircleOptions()
                     .center(Green_stop_position.get(i))
                     .radius(mSTOP_RADIUS)
                     .strokeColor(Color.WHITE)
-                    .fillColor(android.graphics.Color.rgb(0x00,0xcc,0x66)));
+                    .fillColor(android.graphics.Color.rgb(0x00,0xcc,0x66))));
         }
 
     }
 
     public void clearAll(){
-        for(int i = 0; i < mExpress_Stop_Number ; i++){
-            Express_Polyline[i].remove();
-            Express_Circle[i].remove();
+        if(Express_Polyline.size()>0) {
+            for (int i = 0; i < Express_Polyline.size(); i++) {
+                Express_Polyline.get(i).remove();
+            }
+            Express_Polyline.clear();
         }
-        for(int i = 0; i < mTrolley_Stop_Number ; i++){
-            Trolley_Polyline[i].remove();
-            Trolley_Circle[i].remove();
+        if(Express_Circle.size()>0) {
+            for (int i = 0; i < Express_Circle.size(); i++) {
+                Express_Circle.get(i).remove();
+            }
+            Express_Circle.clear();
         }
-        for(int i = 0; i < mBlue_Stop_Number ; i++){
-            Blue_Polyline[i].remove();
-            Blue_Circle[i].remove();
+
+        if(Trolley_Polyline.size()>0) {
+            for (int i = 0; i < Trolley_Polyline.size(); i++) {
+                Trolley_Polyline.get(i).remove();
+            }
+            Trolley_Polyline.clear();
         }
-        for(int i = 0; i < mRed_Stop_Number ; i++){
-            Red_Polyline[i].remove();
-            Red_Circle[i].remove();
+        if(Trolley_Circle.size()>0) {
+            for (int i = 0; i < Trolley_Circle.size(); i++) {
+                Trolley_Circle.get(i).remove();
+            }
+            Trolley_Circle.clear();
         }
-        for(int i = 0; i < mGreen_Stop_Number ; i++){
-            Green_Polyline[i].remove();
-            Green_Circle[i].remove();
+
+        if(Blue_Polyline.size()>0) {
+            for (int i = 0; i < Blue_Polyline.size(); i++) {
+                Blue_Polyline.get(i).remove();
+            }
+            Blue_Polyline.clear();
         }
+        if(Blue_Circle.size()>0) {
+            for (int i = 0; i < Blue_Circle.size(); i++) {
+                Blue_Circle.get(i).remove();
+            }
+            Blue_Circle.clear();
+        }
+
+        if(Red_Polyline.size()>0) {
+            for (int i = 0; i < Red_Polyline.size(); i++) {
+                Red_Polyline.get(i).remove();
+            }
+            Red_Polyline.clear();
+        }
+        if(Red_Circle.size()>0) {
+            for (int i = 0; i < Red_Circle.size(); i++) {
+                Red_Circle.get(i).remove();
+            }
+            Red_Circle.clear();
+        }
+
+        if(Green_Polyline.size()>0) {
+            for (int i = 0; i < Green_Polyline.size(); i++) {
+                Green_Polyline.get(i).remove();
+            }
+            Green_Polyline.clear();
+        }
+        if(Green_Circle.size()>0) {
+            for (int i = 0; i < Green_Circle.size(); i++) {
+                Green_Circle.get(i).remove();
+            }
+            Green_Circle.clear();
+        }
+    }
+
+    public LatLng getStopLatLng(String stopName, String route){
+        int i;
+        LatLng position;
+        switch (route){
+            case "express" :
+                i = Express_stop.indexOf(stopName);
+                position = Express_stop_position.get(i);
+                break;
+            case "trolley" :
+                i = Trolley_stop.indexOf(stopName);
+                position = Trolley_stop_position.get(i);
+                break;
+            case "red" :
+                i = Red_stop.indexOf(stopName);
+                position = Red_stop_position.get(i);
+                break;
+            case "blue" :
+                i = Blue_stop.indexOf(stopName);
+                position = Blue_stop_position.get(i);
+                break;
+            case "green" :
+                i = Green_stop.indexOf(stopName);
+                position = Green_stop_position.get(i);
+                break;
+            default:
+                position = null;
+        }
+        return position;
     }
 
     public void drawBetweenStop(String route, String start_stop, String end_stop, GoogleMap map){
@@ -136,101 +212,101 @@ public class Route {
             case "express" :
                 start = Express_stop.indexOf(start_stop);
                 end = Express_stop.indexOf(end_stop);
-                Express_Circle[start] = map.addCircle(new CircleOptions()
+                Express_Circle.add(map.addCircle(new CircleOptions()
                         .center(Express_stop_position.get(start))
                         .radius(mSTOP_RADIUS)
                         .strokeColor(Color.WHITE)
-                        .fillColor(android.graphics.Color.rgb(0x33,0x33,0x33)));
-                Express_Circle[end] = map.addCircle(new CircleOptions()
+                        .fillColor(android.graphics.Color.rgb(0x33,0x33,0x33))));
+                Express_Circle.add(map.addCircle(new CircleOptions()
                         .center(Express_stop_position.get(end))
                         .radius(mSTOP_RADIUS)
                         .strokeColor(Color.WHITE)
-                        .fillColor(android.graphics.Color.rgb(0x33,0x33,0x33)));
+                        .fillColor(android.graphics.Color.rgb(0x33,0x33,0x33))));
                 if(end < start)
                     end = end + mExpress_Stop_Number;
                 for(int i = start; i < end; i++){
                     int j = i % mExpress_Stop_Number;
-                    Express_Polyline[j] = map.addPolyline(Express[j]);
+                    Express_Polyline.add(map.addPolyline(Express[j]));
                 }
                 break;
             case "trolley" :
                 start = Trolley_stop.indexOf(start_stop);
                 end = Trolley_stop.indexOf(end_stop);
-                Trolley_Circle[start] = map.addCircle(new CircleOptions()
+                Trolley_Circle.add(map.addCircle(new CircleOptions()
                         .center(Trolley_stop_position.get(start))
                         .radius(mSTOP_RADIUS)
                         .strokeColor(Color.WHITE)
-                        .fillColor(android.graphics.Color.rgb(0xff,0xcc,0x00)));
-                Trolley_Circle[end] = map.addCircle(new CircleOptions()
+                        .fillColor(android.graphics.Color.rgb(0xff,0xcc,0x00))));
+                Trolley_Circle.add(map.addCircle(new CircleOptions()
                         .center(Trolley_stop_position.get(end))
                         .radius(mSTOP_RADIUS)
                         .strokeColor(Color.WHITE)
-                        .fillColor(android.graphics.Color.rgb(0xff,0xcc,0x00)));
+                        .fillColor(android.graphics.Color.rgb(0xff,0xcc,0x00))));
                 if(end < start)
                     end = end + mTrolley_Stop_Number;
                 for(int i = start; i < end; i++){
                     int j = i % mTrolley_Stop_Number;
-                    Trolley_Polyline[j] = map.addPolyline(Trolley[j]);
+                    Trolley_Polyline.add(map.addPolyline(Trolley[j]));
                 }
                 break;
             case "blue" :
                 start = Blue_stop.indexOf(start_stop);
                 end = Blue_stop.indexOf(end_stop);
-                Blue_Circle[start] = map.addCircle(new CircleOptions()
+                Blue_Circle.add(map.addCircle(new CircleOptions()
                         .center(Blue_stop_position.get(start))
                         .radius(mSTOP_RADIUS)
                         .strokeColor(Color.WHITE)
-                        .fillColor(android.graphics.Color.rgb(0x00,0x00,0xff)));
-                Blue_Circle[end] = map.addCircle(new CircleOptions()
+                        .fillColor(android.graphics.Color.rgb(0x00,0x00,0xff))));
+                Blue_Circle.add(map.addCircle(new CircleOptions()
                         .center(Blue_stop_position.get(end))
                         .radius(mSTOP_RADIUS)
                         .strokeColor(Color.WHITE)
-                        .fillColor(android.graphics.Color.rgb(0x00,0x00,0xff)));
+                        .fillColor(android.graphics.Color.rgb(0x00,0x00,0xff))));
                 if(end < start)
                     end = end + mBlue_Stop_Number;
                 for(int i = start; i < end; i++){
                     int j = i % mBlue_Stop_Number;
-                    Blue_Polyline[j] = map.addPolyline(Blue[j]);
+                    Blue_Polyline.add(map.addPolyline(Blue[j]));
                 }
                 break;
             case "red" :
                 start = Red_stop.indexOf(start_stop);
                 end = Red_stop.indexOf(end_stop);
-                Red_Circle[start] = map.addCircle(new CircleOptions()
+                Red_Circle.add(map.addCircle(new CircleOptions()
                         .center(Red_stop_position.get(start))
                         .radius(mSTOP_RADIUS)
                         .strokeColor(Color.WHITE)
-                        .fillColor(android.graphics.Color.rgb(0xff,0x11,0x00)));
-                Red_Circle[end] = map.addCircle(new CircleOptions()
+                        .fillColor(android.graphics.Color.rgb(0xff,0x11,0x00))));
+                Red_Circle.add(map.addCircle(new CircleOptions()
                         .center(Red_stop_position.get(end))
                         .radius(mSTOP_RADIUS)
                         .strokeColor(Color.WHITE)
-                        .fillColor(android.graphics.Color.rgb(0xff,0x11,0x00)));
+                        .fillColor(android.graphics.Color.rgb(0xff,0x11,0x00))));
                 if(end < start)
                     end = end + mRed_Stop_Number;
                 for(int i = start; i < end; i++){
                     int j = i % mRed_Stop_Number;
-                    Red_Polyline[j] = map.addPolyline(Red[j]);
+                    Red_Polyline.add(map.addPolyline(Red[j]));
                 }
                 break;
             case "green" :
                 start = Green_stop.indexOf(start_stop);
                 end = Green_stop.indexOf(end_stop);
-                Green_Circle[start] = map.addCircle(new CircleOptions()
+                Green_Circle.add(map.addCircle(new CircleOptions()
                         .center(Green_stop_position.get(start))
                         .radius(mSTOP_RADIUS)
                         .strokeColor(Color.WHITE)
-                        .fillColor(android.graphics.Color.rgb(0x00,0xcc,0x66)));
-                Green_Circle[end] = map.addCircle(new CircleOptions()
+                        .fillColor(android.graphics.Color.rgb(0x00,0xcc,0x66))));
+                Green_Circle.add(map.addCircle(new CircleOptions()
                         .center(Green_stop_position.get(end))
                         .radius(mSTOP_RADIUS)
                         .strokeColor(Color.WHITE)
-                        .fillColor(android.graphics.Color.rgb(0x00,0xcc,0x66)));
+                        .fillColor(android.graphics.Color.rgb(0x00,0xcc,0x66))));
                 if(end < start)
                     end = end + mGreen_Stop_Number;
                 for(int i = start; i < end; i++){
                     int j = i % mGreen_Stop_Number;
-                    Green_Polyline[j] = map.addPolyline(Green[j]);
+                    Green_Polyline.add(map.addPolyline(Green[j]));
                 }
                 break;
 
