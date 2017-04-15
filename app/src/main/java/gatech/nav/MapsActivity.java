@@ -70,7 +70,6 @@ public class MapsActivity extends FragmentActivity
     private GoogleMap mMap;
     private GoogleApiClient mGoogleApiClient;
     private static final String TAG = MapsActivity.class.getSimpleName();
-    Circle circle = null;
 
 
     private static final int DEFAULT_ZOOM = 15;
@@ -87,6 +86,9 @@ public class MapsActivity extends FragmentActivity
     private View mapView;
     private FloatingSearchView mSearchView;
     private JsonArray mBus;
+    Circle circle = null;
+    List<Circle> allCircles = new ArrayList<Circle>();
+
     Double littlebit = 0.001;
 
     Handler handler = new Handler(Looper.getMainLooper());
@@ -258,7 +260,7 @@ public class MapsActivity extends FragmentActivity
 
 
     private class busLive extends AsyncTask<Void, Void, JsonArray> {
-        private String stringUrl = "m.gatech.edu/api/buses/position";
+        private String stringUrl = "http://m.gatech.edu/api/buses/position";
 
         @Override
         protected void onPreExecute(){
@@ -267,7 +269,7 @@ public class MapsActivity extends FragmentActivity
         @Override
         protected JsonArray doInBackground(Void...params) {
             try{
-                URL url = new URL(stringUrl + mSearchKey);
+                URL url = new URL(stringUrl);
                 URLConnection uc = url.openConnection();
                 uc.setRequestProperty("Accept", "text/html");
                 uc.connect();
@@ -345,13 +347,13 @@ public class MapsActivity extends FragmentActivity
         DownloadTask downloadTask = new DownloadTask();
         downloadTask.execute(url);*/
 
-    new Handler(Looper.getMainLooper()).post(new Runnable() {
-        @Override
-        public void run() {
-            createCircles();
+        new Handler(Looper.getMainLooper()).post(new Runnable() {
+            @Override
+            public void run() {
+                createCircles();
 
-        }
-    });
+            }
+        });
 
         Thread t = new Thread() {
 
@@ -365,6 +367,7 @@ public class MapsActivity extends FragmentActivity
                         runOnUiThread(new Runnable() {
                             @Override
                             public void run() {
+                                new busLive().execute();
                                 createCircles();
                             }
                         });
@@ -388,41 +391,63 @@ public class MapsActivity extends FragmentActivity
     }
 
     private void createCircles() {
-
+     //   allCircles.clear();
         if (circle != null){
             circle.remove();
         }
+     //  littlebit = littlebit +littlebit;
 
-        circle = mMap.addCircle(new CircleOptions()
-                .center(new LatLng(33.780263, -84.405928 + littlebit))
-                .radius(2)
-                .strokeColor(Color.RED)
-                .fillColor(Color.RED));
-
-        littlebit = littlebit +littlebit;
 
         if (mBus != null) {
             int s;
+            int c = 0;
             s = mBus.size();
-            Log.d(TAG,Integer.toString(s));
+
             for (int i = 0; i < s; i++) {
+                int colour = 0;
+                boolean realbus = false;
+
                 JsonObject bus = mBus.get(i).getAsJsonObject();
 
-                 circle = mMap.addCircle(new CircleOptions()
-                        .center(new LatLng(Double.parseDouble(bus.get("lat").toString().substring(1, bus.get("lat").toString().length() - 1)), Double.parseDouble(bus.get("lng").toString().substring(1, bus.get("lng").toString().length() - 1))))
-                        .radius(2)
-                        .strokeColor(Color.BLUE)
-                        .fillColor(Color.BLUE));
-                 circle = mMap.addCircle(new CircleOptions()
-                        .center(new LatLng(33.776348, -84.401926))
-                        .radius(2)
-                        .strokeColor(Color.BLUE)
-                        .fillColor(Color.BLUE));
+                if (bus.get("route").toString().substring(1, bus.get("route").toString().length() - 1).equals("red")) {
+                    colour = 0xffff0000;
+                    realbus = true;
+                } else if (bus.get("route").toString().substring(1, bus.get("route").toString().length() - 1).equals("blue")) {
+                    colour = 0xff0000ff;
+                    realbus = true;
+                } else if (bus.get("route").toString().substring(1, bus.get("route").toString().length() - 1).equals("trolley")) {
+                    colour = 0xffffff00;
+                    realbus = true;
+                } else if (bus.get("route").toString().substring(1, bus.get("route").toString().length() - 1).equals("green")) {
+                    colour = 0xff00ff00;
+                    realbus = true;
+                } else if (bus.get("route").toString().substring(1, bus.get("route").toString().length() - 1).equals("express")) {
+                    colour = 0xff000000;
+                    realbus = true;
+                }
+
+                if (realbus){
+                    c++;
+                    circle = mMap.addCircle(new CircleOptions()
+                            .center(new LatLng(Double.parseDouble(bus.get("lat").toString().substring(0, bus.get("lat").toString().length())), Double.parseDouble(bus.get("lng").toString().substring(0, bus.get("lng").toString().length()))))
+                            .radius(2.5)
+                            .strokeColor(colour)
+                            .fillColor(colour));
+                }
+
+                //allCircles.add(circle);
+
             }
         }
-        else
-            Log.d(TAG,"mBus is still null");
+        else{
 
+            /*circle = mMap.addCircle(new CircleOptions()
+                    .center(new LatLng(33.780263, -84.405928 + littlebit))
+                    .radius(2)
+                    .strokeColor(Color.RED)
+                    .fillColor(Color.RED));*/
+
+            }
     }
 
 
@@ -663,22 +688,22 @@ public class MapsActivity extends FragmentActivity
         });
 
         mSearchView.setOnSearchListener(new FloatingSearchView.OnSearchListener() {
-                                            @Override
-                                            public void onSuggestionClicked(SearchSuggestion searchSuggestion) {
-                                                BuildingSuggestion buildingSuggestion = (BuildingSuggestion) searchSuggestion;
-                                                if(mMarker != null)
-                                                    mMarker.remove();
-                                                mMarker = mMap.addMarker(new MarkerOptions().position(buildingSuggestion.getLatLng()).title(buildingSuggestion.getBody()).snippet(buildingSuggestion.getAddress()));
-                                                View button = findViewById(R.id.gobutton);
-                                                button.setVisibility(View.VISIBLE);
-                                                mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(buildingSuggestion.getLatLng(), 16));
-                                            }
+            @Override
+            public void onSuggestionClicked(SearchSuggestion searchSuggestion) {
+                BuildingSuggestion buildingSuggestion = (BuildingSuggestion) searchSuggestion;
+                if(mMarker != null)
+                    mMarker.remove();
+                mMarker = mMap.addMarker(new MarkerOptions().position(buildingSuggestion.getLatLng()).title(buildingSuggestion.getBody()).snippet(buildingSuggestion.getAddress()));
+                View button = findViewById(R.id.gobutton);
+                button.setVisibility(View.VISIBLE);
+                mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(buildingSuggestion.getLatLng(), 16));
+            }
 
-                                            @Override
-                                            public void onSearchAction(String currentQuery) {
+            @Override
+            public void onSearchAction(String currentQuery) {
 
-                                            }
-                                        });
+            }
+        });
 
     }
 
