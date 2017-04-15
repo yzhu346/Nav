@@ -4,6 +4,8 @@ import android.content.pm.PackageManager;
 import android.graphics.Color;
 import android.location.Location;
 import android.os.AsyncTask;
+import android.os.Handler;
+import android.os.Looper;
 import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.FragmentActivity;
@@ -24,6 +26,8 @@ import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
+import com.google.android.gms.maps.model.Circle;
+import com.google.android.gms.maps.model.CircleOptions;
 import com.google.android.gms.maps.model.Dash;
 import com.google.android.gms.maps.model.Dot;
 import com.google.android.gms.maps.model.Gap;
@@ -66,6 +70,8 @@ public class MapsActivity extends FragmentActivity
     private GoogleMap mMap;
     private GoogleApiClient mGoogleApiClient;
     private static final String TAG = MapsActivity.class.getSimpleName();
+    Circle circle = null;
+
 
     private static final int DEFAULT_ZOOM = 15;
     private static final int PERMISSIONS_REQUEST_ACCESS_FINE_LOCATION = 1;
@@ -80,7 +86,10 @@ public class MapsActivity extends FragmentActivity
     private LatLng mMyLocation;
     private View mapView;
     private FloatingSearchView mSearchView;
+    private JsonArray mBus;
+    Double littlebit = 0.001;
 
+    Handler handler = new Handler(Looper.getMainLooper());
     // Keys for storing activity state.
     private static final String DIRECTION_API_KEY = "AIzaSyCfH6jsTdZgxFXMyBkKcsBlBywGxq7UnnQ";
 
@@ -248,7 +257,53 @@ public class MapsActivity extends FragmentActivity
     }
 
 
+    private class busLive extends AsyncTask<Void, Void, JsonArray> {
+        private String stringUrl = "m.gatech.edu/api/buses/position";
 
+        @Override
+        protected void onPreExecute(){
+        }
+
+        @Override
+        protected JsonArray doInBackground(Void...params) {
+            try{
+                URL url = new URL(stringUrl + mSearchKey);
+                URLConnection uc = url.openConnection();
+                uc.setRequestProperty("Accept", "text/html");
+                uc.connect();
+                JsonParser jp = new JsonParser();
+                JsonElement root = jp.parse(new InputStreamReader((InputStream) uc.getContent()));
+                JsonArray jsonArray = root.getAsJsonArray();
+                if(jsonArray.size() > 0) {
+                    return jsonArray;
+                }
+                else
+                    return null;
+            } catch (MalformedURLException e){
+                Log.e("ERROR",e.getMessage(),e);
+                return null;
+            } catch (IOException e){
+                Log.e("ERROR",e.getMessage(),e);
+                return null;
+            }
+
+        }
+
+        @Override
+        protected void onPostExecute(JsonArray result) {
+            JsonObject jObj;
+            mBus = new JsonArray();
+            int s;
+
+            if (result != null) {
+                s = result.size();
+                for (int i = 0; i < s; i++) {
+                    JsonObject bus = result.get(i).getAsJsonObject();
+                    mBus.add(bus);
+                }
+            }
+        }
+    }
     /**
      * Manipulates the map once available.
      * This callback is triggered when the map is ready to be used.
@@ -290,7 +345,86 @@ public class MapsActivity extends FragmentActivity
         DownloadTask downloadTask = new DownloadTask();
         downloadTask.execute(url);*/
 
+    new Handler(Looper.getMainLooper()).post(new Runnable() {
+        @Override
+        public void run() {
+            createCircles();
+
+        }
+    });
+
+        Thread t = new Thread() {
+
+            @Override
+            public void run() {
+                try{
+                    while(true) {
+
+
+                        Thread.sleep(2000);
+                        runOnUiThread(new Runnable() {
+                            @Override
+                            public void run() {
+                                createCircles();
+                            }
+                        });
+                    }
+                }catch (InterruptedException e) {}
+
+            }
+        };
+        t.start();
+
+  /*      Runnable refresh;
+        refresh = new Runnable() {
+
+            public void run() {
+
+                    createCircles();
+            }
+        };
+        handler.postDelayed(refresh,1000);*/
+
     }
+
+    private void createCircles() {
+
+        if (circle != null){
+            circle.remove();
+        }
+
+        circle = mMap.addCircle(new CircleOptions()
+                .center(new LatLng(33.780263, -84.405928 + littlebit))
+                .radius(2)
+                .strokeColor(Color.RED)
+                .fillColor(Color.RED));
+
+        littlebit = littlebit +littlebit;
+
+        if (mBus != null) {
+            int s;
+            s = mBus.size();
+            Log.d(TAG,Integer.toString(s));
+            for (int i = 0; i < s; i++) {
+                JsonObject bus = mBus.get(i).getAsJsonObject();
+
+                 circle = mMap.addCircle(new CircleOptions()
+                        .center(new LatLng(Double.parseDouble(bus.get("lat").toString().substring(1, bus.get("lat").toString().length() - 1)), Double.parseDouble(bus.get("lng").toString().substring(1, bus.get("lng").toString().length() - 1))))
+                        .radius(2)
+                        .strokeColor(Color.BLUE)
+                        .fillColor(Color.BLUE));
+                 circle = mMap.addCircle(new CircleOptions()
+                        .center(new LatLng(33.776348, -84.401926))
+                        .radius(2)
+                        .strokeColor(Color.BLUE)
+                        .fillColor(Color.BLUE));
+            }
+        }
+        else
+            Log.d(TAG,"mBus is still null");
+
+    }
+
 
     private void setGoButton (){
         Button button = (Button) findViewById(R.id.gobutton);
