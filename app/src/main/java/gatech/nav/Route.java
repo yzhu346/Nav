@@ -1,7 +1,6 @@
 package gatech.nav;
 
 import android.graphics.Color;
-import android.graphics.RadialGradient;
 
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.model.Circle;
