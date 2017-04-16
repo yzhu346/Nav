@@ -32,7 +32,6 @@ import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.Circle;
 import com.google.android.gms.maps.model.CircleOptions;
 import com.google.android.gms.maps.model.Dash;
-import com.google.android.gms.maps.model.Dot;
 import com.google.android.gms.maps.model.Gap;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
@@ -194,18 +193,25 @@ public class MapsActivity extends FragmentActivity
 
     @Override
     public void onMapClick(LatLng point){
-        if(mMarker != null){
-            mMarker.remove();
+        View fragment = (View) findViewById(R.id.fragment1);
+
+        if(fragment.getVisibility()==View.VISIBLE){
+            fragment.setVisibility(View.INVISIBLE);
         }
-        if(mAllWalkingRoute.size()>0) {
-            for (int i = 0; i < mAllWalkingRoute.size(); i++){
-                mAllWalkingRoute.get(i).remove();
+        else {
+            if (mMarker != null) {
+                mMarker.remove();
             }
+            if (mAllWalkingRoute.size() > 0) {
+                for (int i = 0; i < mAllWalkingRoute.size(); i++) {
+                    mAllWalkingRoute.get(i).remove();
+                }
+            }
+            mAllWalkingRoute.clear();
+            mRoute.draw(mMap);
+            View button = findViewById(R.id.gobutton);
+            button.setVisibility(View.INVISIBLE);
         }
-        mAllWalkingRoute.clear();
-        mRoute.draw(mMap);
-        View button = findViewById(R.id.gobutton);
-        button.setVisibility(View.INVISIBLE);
     }
 
 
@@ -348,6 +354,9 @@ public class MapsActivity extends FragmentActivity
 
         mRoute.init();
         mRoute.draw(mMap);
+
+        /*Intent intent = new Intent(this, list_view.class);
+        startActivity(intent);*/
 
         /*route.drawBetweenStop("trolley","marta_a","recctr",mMap);*/
 
@@ -507,11 +516,11 @@ public class MapsActivity extends FragmentActivity
         Button button = (Button) findViewById(R.id.gobutton);
         button.setOnClickListener(new View.OnClickListener(){
             public void onClick(View v){
-                String start = "ferstdr";
+                /*String start = "ferstdr";
                 String dest = "techsqua_ib";
                 String route_id = "trolley";
-                /*List<PatternItem> pattern = Arrays.<PatternItem>asList(
-                        new Dash(20), new Gap(20));*/
+                *//*List<PatternItem> pattern = Arrays.<PatternItem>asList(
+                        new Dash(20), new Gap(20));*//*
 
                 mRoute.drawBetweenStop(route_id,start,dest,mMap);
                 if(mAllWalkingRoute.size()>0) {
@@ -521,8 +530,9 @@ public class MapsActivity extends FragmentActivity
                 }
                 mAllWalkingRoute.clear();
                 drawWalkRoute(mMyLocation,mRoute.getStopLatLng(start,route_id));
-                drawWalkRoute(mRoute.getStopLatLng(dest,route_id),mMarker.getPosition());
+                drawWalkRoute(mRoute.getStopLatLng(dest,route_id),mMarker.getPosition());*/
 
+                ListView listView = new ListView();
 
 
             }
