@@ -1,7 +1,10 @@
 package gatech.nav;
 
 import android.content.pm.PackageManager;
+import android.graphics.Bitmap;
+import android.graphics.Canvas;
 import android.graphics.Color;
+import android.graphics.drawable.Drawable;
 import android.location.Location;
 import android.os.AsyncTask;
 import android.os.Handler;
@@ -17,7 +20,6 @@ import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.RelativeLayout;
 
-
 import com.arlib.floatingsearchview.FloatingSearchView;
 import com.arlib.floatingsearchview.suggestions.model.SearchSuggestion;
 import com.google.android.gms.common.ConnectionResult;
@@ -26,6 +28,7 @@ import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
+import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.Circle;
 import com.google.android.gms.maps.model.CircleOptions;
 import com.google.android.gms.maps.model.Dash;
@@ -36,13 +39,15 @@ import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.maps.model.PatternItem;
+import com.google.android.gms.maps.model.Polygon;
+import com.google.android.gms.maps.model.PolygonOptions;
 import com.google.android.gms.maps.model.Polyline;
 import com.google.android.gms.maps.model.PolylineOptions;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
-
+import com.google.maps.android.SphericalUtil;
 import org.json.JSONObject;
 
 import java.io.BufferedReader;
@@ -59,6 +64,8 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 
+import static com.google.maps.android.SphericalUtil.computeHeading;
+import android.graphics.BitmapFactory;
 
 public class MapsActivity extends FragmentActivity
         implements OnMapReadyCallback,
@@ -87,9 +94,11 @@ public class MapsActivity extends FragmentActivity
     private FloatingSearchView mSearchView;
     private JsonArray mBus;
     Circle circle = null;
+    Polygon polygon = null;
+    Marker marker = null;
     List<Circle> allCircles = new ArrayList<Circle>();
 
-    Double littlebit = 0.001;
+
 
     Handler handler = new Handler(Looper.getMainLooper());
     // Keys for storing activity state.
@@ -361,8 +370,6 @@ public class MapsActivity extends FragmentActivity
             public void run() {
                 try{
                     while(true) {
-
-
                         Thread.sleep(2000);
                         runOnUiThread(new Runnable() {
                             @Override
@@ -391,63 +398,104 @@ public class MapsActivity extends FragmentActivity
     }
 
     private void createCircles() {
-     //   allCircles.clear();
         if (circle != null){
             circle.remove();
         }
-     //  littlebit = littlebit +littlebit;
 
-
+        if (polygon != null){
+            polygon.remove();
+        }
         if (mBus != null) {
             int s;
-            int c = 0;
             s = mBus.size();
 
             for (int i = 0; i < s; i++) {
-                int colour = 0;
+                String colour = "";
                 boolean realbus = false;
 
                 JsonObject bus = mBus.get(i).getAsJsonObject();
+                Double a = Double.parseDouble(bus.get("lat").toString().substring(0, bus.get("lat").toString().length()));
+                Double b = Double.parseDouble(bus.get("lng").toString().substring(0, bus.get("lng").toString().length()));
+                Double c = Double.parseDouble(bus.get("plat").toString().substring(0, bus.get("plat").toString().length()));
+                Double d = Double.parseDouble(bus.get("plng").toString().substring(0, bus.get("plng").toString().length()));
+
+                //Logic here is that we draw imaginary line, perpendicular to original from-to [(a,b) to (c,d)]
+                //and offset ends of that imaginary perpendicular line by certain amount, which are coordinate alpha and beta
+                Double bearing = computeHeading(new LatLng(a,b),new LatLng(c,d));
+                Double gamma_x = c + Math.cos(bearing)/10000; // gamma is coordinate of to-location, scaled.
+                Double gamma_y = d + Math.sin(bearing)/10000;
+                Double alpha_x = a + Math.cos(bearing+90)/10000; //alpha is one side of bottom of triangular marker
+                Double alpha_y = b + Math.sin(bearing+90)/10000;
+                Double beta_x = a + Math.cos(bearing+270)/10000; // beta is the other side of triangular marker
+                Double beta_y = b + Math.sin(bearing+270)/10000;
 
                 if (bus.get("route").toString().substring(1, bus.get("route").toString().length() - 1).equals("red")) {
-                    colour = 0xffff0000;
+                    colour = "red";
                     realbus = true;
                 } else if (bus.get("route").toString().substring(1, bus.get("route").toString().length() - 1).equals("blue")) {
-                    colour = 0xff0000ff;
+                    colour = "blue";
                     realbus = true;
                 } else if (bus.get("route").toString().substring(1, bus.get("route").toString().length() - 1).equals("trolley")) {
-                    colour = 0xffffff00;
+                    colour = "yellow";
                     realbus = true;
                 } else if (bus.get("route").toString().substring(1, bus.get("route").toString().length() - 1).equals("green")) {
-                    colour = 0xff00ff00;
+                    colour = "green";
                     realbus = true;
                 } else if (bus.get("route").toString().substring(1, bus.get("route").toString().length() - 1).equals("express")) {
-                    colour = 0xff000000;
+                    colour = "black";
                     realbus = true;
                 }
 
                 if (realbus){
-                    c++;
-                    circle = mMap.addCircle(new CircleOptions()
-                            .center(new LatLng(Double.parseDouble(bus.get("lat").toString().substring(0, bus.get("lat").toString().length())), Double.parseDouble(bus.get("lng").toString().substring(0, bus.get("lng").toString().length()))))
-                            .radius(2.5)
-                            .strokeColor(colour)
-                            .fillColor(colour));
+                    if (colour == "red") {
+                        Bitmap bm = BitmapFactory.decodeResource(getResources(), R.drawable.arrow_red);
+                        Bitmap bmm = Bitmap.createScaledBitmap(bm, 50, 50, true);
+                        marker = mMap.addMarker(new MarkerOptions()
+                                .position(new LatLng(a, b))
+                                .anchor(0.5f, 0.5f)
+                                .rotation(Float.valueOf(String.valueOf(bearing)))
+                                .icon(BitmapDescriptorFactory.fromBitmap(bmm)));
+                    }
+                    else if (colour == "blue"){
+                        Bitmap bm = BitmapFactory.decodeResource(getResources(), R.drawable.arrow_red);
+                        Bitmap bmm = Bitmap.createScaledBitmap(bm, 50, 50, true);
+                        marker = mMap.addMarker(new MarkerOptions()
+                                .position(new LatLng(a, b))
+                                .anchor(0.5f, 0.5f)
+                                .rotation(Float.valueOf(String.valueOf(bearing)))
+                                .icon(BitmapDescriptorFactory.fromBitmap(bmm)));
+                    }
+                    else if (colour == "green"){
+                        Bitmap bm = BitmapFactory.decodeResource(getResources(), R.drawable.arrow_green);
+                        Bitmap bmm = Bitmap.createScaledBitmap(bm, 50, 50, true);
+                        marker = mMap.addMarker(new MarkerOptions()
+                                .position(new LatLng(a, b))
+                                .anchor(0.5f, 0.5f)
+                                .rotation(Float.valueOf(String.valueOf(bearing)))
+                                .icon(BitmapDescriptorFactory.fromBitmap(bmm)));
+                    }
+                    else if (colour == "yellow"){
+                        Bitmap bm = BitmapFactory.decodeResource(getResources(), R.drawable.arrow_yellow);
+                        Bitmap bmm = Bitmap.createScaledBitmap(bm, 50, 50, true);
+                        marker = mMap.addMarker(new MarkerOptions()
+                                .position(new LatLng(a, b))
+                                .anchor(0.5f, 0.5f)
+                                .rotation(Float.valueOf(String.valueOf(bearing)))
+                                .icon(BitmapDescriptorFactory.fromBitmap(bmm)));
+                    }
+                    else if (colour == "black"){
+                        Bitmap bm = BitmapFactory.decodeResource(getResources(), R.drawable.arrow_black);
+                        Bitmap bmm = Bitmap.createScaledBitmap(bm, 50, 50, true);
+                        marker = mMap.addMarker(new MarkerOptions()
+                                .position(new LatLng(a, b))
+                                .anchor(0.5f, 0.5f)
+                                .rotation(Float.valueOf(String.valueOf(bearing)))
+                                .icon(BitmapDescriptorFactory.fromBitmap(bmm)));
+                    }
                 }
-
-                //allCircles.add(circle);
-
             }
         }
-        else{
-
-            /*circle = mMap.addCircle(new CircleOptions()
-                    .center(new LatLng(33.780263, -84.405928 + littlebit))
-                    .radius(2)
-                    .strokeColor(Color.RED)
-                    .fillColor(Color.RED));*/
-
-            }
+        else{}
     }
 
 
