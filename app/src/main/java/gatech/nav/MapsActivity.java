@@ -97,7 +97,7 @@ public class MapsActivity extends FragmentActivity
     Polygon polygon = null;
     Marker marker = null;
     List<Circle> allCircles = new ArrayList<Circle>();
-
+    int threadtickscount = 0;
 
 
     Handler handler = new Handler(Looper.getMainLooper());
@@ -370,14 +370,18 @@ public class MapsActivity extends FragmentActivity
             public void run() {
                 try{
                     while(true) {
-                        Thread.sleep(2000);
-                        runOnUiThread(new Runnable() {
-                            @Override
-                            public void run() {
-                                new busLive().execute();
-                                createCircles();
-                            }
-                        });
+                        if (threadtickscount <3)
+                            { Thread.sleep(1);}
+                        else
+                        {Thread.sleep(2000);}
+                            runOnUiThread(new Runnable() {
+                                @Override
+                                public void run() {
+                                    new busLive().execute();
+                                    createCircles();
+                                }
+                            });
+                        threadtickscount++;
                     }
                 }catch (InterruptedException e) {}
 
