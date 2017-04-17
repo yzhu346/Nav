@@ -5,6 +5,7 @@ import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.drawable.Drawable;
+import android.icu.text.DateFormat;
 import android.location.Location;
 import android.os.AsyncTask;
 import android.os.Handler;
@@ -60,11 +61,15 @@ import java.net.URL;
 import java.net.URLConnection;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Calendar;
 
 import static com.google.maps.android.SphericalUtil.computeHeading;
+import static java.lang.Math.abs;
+
 import android.graphics.BitmapFactory;
 
 public class MapsActivity extends FragmentActivity
@@ -93,12 +98,13 @@ public class MapsActivity extends FragmentActivity
     private View mapView;
     private FloatingSearchView mSearchView;
     private JsonArray mBus;
+    private JsonArray resultArray;
     Circle circle = null;
     Polygon polygon = null;
-    Marker marker = null;
+    Marker marker;
     List<Circle> allCircles = new ArrayList<Circle>();
     int threadtickscount = 0;
-
+    private List<Marker> markerList = new ArrayList<Marker>();
 
     Handler handler = new Handler(Looper.getMainLooper());
     // Keys for storing activity state.
@@ -278,6 +284,9 @@ public class MapsActivity extends FragmentActivity
         @Override
         protected JsonArray doInBackground(Void...params) {
             try{
+                resultArray = new JsonArray();
+                Calendar c = Calendar.getInstance();
+                JsonObject jObj;
                 URL url = new URL(stringUrl);
                 URLConnection uc = url.openConnection();
                 uc.setRequestProperty("Accept", "text/html");
@@ -286,7 +295,19 @@ public class MapsActivity extends FragmentActivity
                 JsonElement root = jp.parse(new InputStreamReader((InputStream) uc.getContent()));
                 JsonArray jsonArray = root.getAsJsonArray();
                 if(jsonArray.size() > 0) {
-                    return jsonArray;
+                    int s = jsonArray.size();
+                        for (int i = 0; i < s; i++) {
+                         jObj = jsonArray.get(i).getAsJsonObject();
+                        int len = jObj.get("ts").toString().length();
+                            int timeNow = c.get(Calendar.SECOND)+c.get(Calendar.MINUTE)*60+c.get(Calendar.HOUR_OF_DAY)*3600;
+                            int timeBus = Integer.parseInt(jObj.get("ts").toString().substring(7,9))
+                                     +Integer.parseInt(jObj.get("ts").toString().substring(4,6))*60
+                                     +Integer.parseInt(jObj.get("ts").toString().substring(1,3))*3600;
+                        int timeDiff = abs(timeNow - timeBus);
+                        if (timeDiff <100)
+                        {resultArray.add(jObj);}
+                    }
+                    return resultArray;
                 }
                 else
                     return null;
@@ -356,13 +377,14 @@ public class MapsActivity extends FragmentActivity
         DownloadTask downloadTask = new DownloadTask();
         downloadTask.execute(url);*/
 
-        new Handler(Looper.getMainLooper()).post(new Runnable() {
+      /*  new Handler(Looper.getMainLooper()).post(new Runnable() {
             @Override
             public void run() {
                 createCircles();
 
             }
-        });
+        });*/
+
 
         Thread t = new Thread() {
 
@@ -378,7 +400,9 @@ public class MapsActivity extends FragmentActivity
                                 @Override
                                 public void run() {
                                     new busLive().execute();
+
                                     createCircles();
+
                                 }
                             });
                         threadtickscount++;
@@ -402,16 +426,23 @@ public class MapsActivity extends FragmentActivity
     }
 
     private void createCircles() {
-        if (circle != null){
-            circle.remove();
+
+
+        if (markerList != null){
+            for (Marker marker : markerList){
+                marker.remove();}
         }
 
-        if (polygon != null){
-            polygon.remove();
-        }
         if (mBus != null) {
             int s;
             s = mBus.size();
+
+           /* for (int j = 0; j < s; j++)
+            {
+                if (marker != null){
+                    marker.remove();
+                }
+            }*/
 
             for (int i = 0; i < s; i++) {
                 String colour = "";
@@ -426,13 +457,14 @@ public class MapsActivity extends FragmentActivity
                 //Logic here is that we draw imaginary line, perpendicular to original from-to [(a,b) to (c,d)]
                 //and offset ends of that imaginary perpendicular line by certain amount, which are coordinate alpha and beta
                 Double bearing = computeHeading(new LatLng(a,b),new LatLng(c,d));
-                Double gamma_x = c + Math.cos(bearing)/10000; // gamma is coordinate of to-location, scaled.
+
+         /*       Double gamma_x = c + Math.cos(bearing)/10000; // gamma is coordinate of to-location, scaled.
                 Double gamma_y = d + Math.sin(bearing)/10000;
                 Double alpha_x = a + Math.cos(bearing+90)/10000; //alpha is one side of bottom of triangular marker
                 Double alpha_y = b + Math.sin(bearing+90)/10000;
                 Double beta_x = a + Math.cos(bearing+270)/10000; // beta is the other side of triangular marker
                 Double beta_y = b + Math.sin(bearing+270)/10000;
-
+*/
                 if (bus.get("route").toString().substring(1, bus.get("route").toString().length() - 1).equals("red")) {
                     colour = "red";
                     realbus = true;
@@ -461,7 +493,7 @@ public class MapsActivity extends FragmentActivity
                                 .icon(BitmapDescriptorFactory.fromBitmap(bmm)));
                     }
                     else if (colour == "blue"){
-                        Bitmap bm = BitmapFactory.decodeResource(getResources(), R.drawable.arrow_red);
+                        Bitmap bm = BitmapFactory.decodeResource(getResources(), R.drawable.arrow_blue);
                         Bitmap bmm = Bitmap.createScaledBitmap(bm, 50, 50, true);
                         marker = mMap.addMarker(new MarkerOptions()
                                 .position(new LatLng(a, b))
@@ -497,9 +529,9 @@ public class MapsActivity extends FragmentActivity
                                 .icon(BitmapDescriptorFactory.fromBitmap(bmm)));
                     }
                 }
+                markerList.add(marker);
             }
         }
-        else{}
     }
 
 
