@@ -1,7 +1,6 @@
 package gatech.nav;
 
 import android.graphics.Color;
-import android.graphics.RadialGradient;
 
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.model.Circle;
@@ -322,11 +321,11 @@ public class Route {
          * ***********************************************************************************************************
          * ***********************************************************************************************************
          */
-        Express_stop.add("clough");
+        Express_stop.add("cloucomm");
         Express_stop_position.add(new LatLng(33.7753,-84.39611));
-        Express_stop.add("techsqua_ib");
+        Express_stop.add("techsqua_ob");
         Express_stop_position.add(new LatLng(33.7768,-84.38975));
-        Express_stop.add("87");
+        Express_stop.add("duprmrt");
         Express_stop_position.add(new LatLng(33.77678,-84.38749));
         Express_stop.add("techsqua");
         Express_stop_position.add(new LatLng(33.77692,-84.38978));
@@ -1866,7 +1865,7 @@ public class Route {
          */
         Green_stop.add("tranhub");
         Green_stop_position.add(new LatLng(33.773226,-84.397016));
-        Green_stop.add("centrstud");
+        Green_stop.add("studcent_ib");
         Green_stop_position.add(new LatLng(33.77335,-84.39917));
         Green_stop.add("creccent");
         Green_stop_position.add(new LatLng(33.774997,-84.402359));
