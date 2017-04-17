@@ -1,10 +1,10 @@
 package gatech.nav;
 
+import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Color;
-import android.graphics.drawable.Drawable;
 import android.location.Location;
 import android.os.AsyncTask;
 import android.os.Handler;
@@ -86,6 +86,7 @@ public class MapsActivity extends FragmentActivity
     private ArrayList<SearchSuggestion> mSearchSuggestion = new ArrayList<>();
     private Route mRoute = new Route();
     private LinkedList<Polyline> mAllWalkingRoute = new LinkedList<Polyline>();
+    private Listview listView = new Listview();
 
     private Location mLastLocation;
     private LatLng mMyLocation;
@@ -102,6 +103,8 @@ public class MapsActivity extends FragmentActivity
     Handler handler = new Handler(Looper.getMainLooper());
     // Keys for storing activity state.
     private static final String DIRECTION_API_KEY = "AIzaSyCfH6jsTdZgxFXMyBkKcsBlBywGxq7UnnQ";
+
+
 
 
 
@@ -531,12 +534,49 @@ public class MapsActivity extends FragmentActivity
                 mAllWalkingRoute.clear();
                 drawWalkRoute(mMyLocation,mRoute.getStopLatLng(start,route_id));
                 drawWalkRoute(mRoute.getStopLatLng(dest,route_id),mMarker.getPosition());*/
+                //ArrayList<String> route = null;
 
-                ListView listView = new ListView();
+
+                gatech.nav.Location user = LatLngConvertToLocation(mMyLocation);
+                gatech.nav.Location dest = LatLngConvertToLocation(mMarker.getPosition());
+                new FindRoute().execute(user,dest);
 
 
             }
         });
+    }
+
+    private class FindRoute extends AsyncTask<gatech.nav.Location,Void,ArrayList<String>>{
+        @Override
+        protected void onPreExecute(){
+        }
+
+        @Override
+        protected ArrayList<String> doInBackground(gatech.nav.Location...params) {
+            ArrayList<String> route = null;
+            if(mMarker!=null) {
+                RouteSuggestion routeSuggestion = new RouteSuggestion();
+                route = RouteSuggestion.init(params[0],params[1]);
+            }
+            return route;
+
+        }
+
+        @Override
+        protected void onPostExecute(ArrayList<String> result) {
+            listView.setValues(result);
+            View fragment = (View) findViewById(R.id.fragment1);
+            fragment.setVisibility(View.VISIBLE);
+
+
+        }
+    }
+
+    private gatech.nav.Location LatLngConvertToLocation(LatLng latLng){
+        String lat = Double.toString(latLng.latitude);
+        String lon = Double.toString(latLng.longitude);
+        gatech.nav.Location location = new gatech.nav.Location(lat,lon);
+        return location;
     }
 
     private void drawWalkRoute(LatLng start, LatLng dest){

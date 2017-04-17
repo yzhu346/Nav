@@ -2,7 +2,7 @@ package gatech.nav; /**
  * Created by xinyao on 4/4/17.
  */
 //package com.mkyong.csv;
-/*import com.sun.corba.se.impl.encoding.CodeSetConversion;*/
+
 
 import java.util.*;
 import java.lang.*;
@@ -94,19 +94,19 @@ public class RouteSuggestion {
                                     //+ stop_dest.getStopid() + " via " + route[routeId_stop] + " route");
                             try {
                                 int totalTime = 0;
-
                                 String getonStop_lat = stop_user.getLocation().getLatitude();
                                 String getonStop_lon = stop_user.getLocation().getLongitude();
                                 String getoffStop_lat = stop_dest.getLocation().getLatitude();
                                 String getoffStop_lon = stop_dest.getLocation().getLongitude();
 
-                                if (travel_time.travel(route[routeId_stop], stop_user, stop_dest, user) == 0) continue;
+                                if (travel_time.bustravel(route[routeId_stop], stop_user, stop_dest, user) == 0) continue;
 
-                                totalTime = travel_time.travel(route[routeId_stop], stop_user, stop_dest, user)
-                                        + walk_time.walk(user_lat, user_lon, getonStop_lat, getonStop_lon)
-                                        + walk_time.walk(getoffStop_lat, getoffStop_lon, dest_lat, dest_lon);
+                                totalTime = travel_time.bustravel(route[routeId_stop], stop_user, stop_dest, user)
+                                        + travel_time.walk(user, stop_user.getLocation())
+                                        + travel_time.walk(stop_dest.getLocation(), dest);
 
-                                System.out.println("total time: " + totalTime);
+                                //System.out.println(getonStop_lat.toString() + " " + getoffStop_lat.toString());
+                                //System.out.println("total time: " + totalTime);
                                 ret.add(new Path(stop_user.getStopid(), stop_dest.getStopid(), route[routeId_user], totalTime));
 
                             } catch (Exception ex) {
@@ -218,7 +218,6 @@ public class RouteSuggestion {
             TotalBusStops_GT.add(new BusStop("fershemp_ob", new Location("33.778141", "-84.401829")));
             TotalBusStops_GT.add(new BusStop("reccent_ob", new Location("33.7751", "-84.40265")));
             TotalBusStops_GT.add(new BusStop("studcent", new Location("33.77335", "-84.39917")));
-
         }
 
         for (int i = 0; i < TotalBusStops_GT.size(); i++) {
@@ -274,18 +273,21 @@ public class RouteSuggestion {
 
         // return the strings
         // getonid, getoffid, routeid, totaltime, nextbusid, arrivetime
+        try {
+            int complete_walk = travel_time.walk(user, dest);
+
+            returnString.add(busStops.get(0).getStopid() + " " + busStops.get(1).getStopid() + " walk " + Integer.toString(complete_walk));
+        } catch (Exception ex) {
+            ex.printStackTrace();
+        }
         for (int i = 0; i < returnOptions.size(); i++) {
             returnString.add(returnOptions.get(i).getGeton_stop() + " " + returnOptions.get(i).getGetoff_stop() + " " + returnOptions.get(i).getRoute() + " " + Integer.toString(returnOptions.get(i).getTotal_time()));
         }
         return returnString;
     }
 
-    public static void init(String[] args) {
-        Location user = new Location("33.7757", "-84.4040");       // campus recreation center
-        Location destination = new Location("33.7773", "-84.3962"); // klaus college of computing
+    public static ArrayList<String> init (Location user, Location destination) {
         ArrayList<String> returnStrings = Solution(user, destination);
-        for (int i = 0; i < returnStrings.size(); i++) {
-            System.out.println(returnStrings.get(i));
-        }
+        return returnStrings;
     }
 }

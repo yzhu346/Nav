@@ -12,6 +12,11 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.URL;
 import java.net.URLConnection;
+import java.util.concurrent.TimeUnit;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.SQLException;
+import java.sql.Statement;
 import java.lang.String;
 
 
@@ -23,7 +28,7 @@ public class walk_time {
         String url2 = "&destinations=";
         String url3 = "&departure_time=now&traffic_model=best_guess&mode=walking&key=AIzaSyDfdmZLnPimkOIVckgLyJLtLRmXE5dEKhg";
         String path = url1 + origins_lat + "," + origins_lon + url2 + destination_lat + "," + destination_lon + url3;
-        System.out.println(path);
+        //System.out.println(path);
         URL url = new URL(path);
         URLConnection connection = url.openConnection();
         Document doc = parseXML(connection.getInputStream());
@@ -50,7 +55,7 @@ public class walk_time {
             }
 
         }
-        System.out.println("the walking takes: " + walk_time);
+        //System.out.println("the walking takes: " + walk_time);
         return walk_time;
     }
     private static Document parseXML(InputStream stream)
