@@ -1,9 +1,14 @@
 package gatech.nav;
 
+import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.graphics.Bitmap;
+import android.graphics.Canvas;
 import android.graphics.Color;
 import android.location.Location;
 import android.os.AsyncTask;
+import android.os.Handler;
+import android.os.Looper;
 import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.FragmentActivity;
@@ -15,7 +20,6 @@ import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.RelativeLayout;
 
-
 import com.arlib.floatingsearchview.FloatingSearchView;
 import com.arlib.floatingsearchview.suggestions.model.SearchSuggestion;
 import com.google.android.gms.common.ConnectionResult;
@@ -24,21 +28,25 @@ import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
+import com.google.android.gms.maps.model.BitmapDescriptorFactory;
+import com.google.android.gms.maps.model.Circle;
+import com.google.android.gms.maps.model.CircleOptions;
 import com.google.android.gms.maps.model.Dash;
-import com.google.android.gms.maps.model.Dot;
 import com.google.android.gms.maps.model.Gap;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.maps.model.PatternItem;
+import com.google.android.gms.maps.model.Polygon;
+import com.google.android.gms.maps.model.PolygonOptions;
 import com.google.android.gms.maps.model.Polyline;
 import com.google.android.gms.maps.model.PolylineOptions;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
-
+import com.google.maps.android.SphericalUtil;
 import org.json.JSONObject;
 
 import java.io.BufferedReader;
@@ -55,6 +63,8 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 
+import static com.google.maps.android.SphericalUtil.computeHeading;
+import android.graphics.BitmapFactory;
 
 public class MapsActivity extends FragmentActivity
         implements OnMapReadyCallback,
@@ -67,6 +77,7 @@ public class MapsActivity extends FragmentActivity
     private GoogleApiClient mGoogleApiClient;
     private static final String TAG = MapsActivity.class.getSimpleName();
 
+
     private static final int DEFAULT_ZOOM = 15;
     private static final int PERMISSIONS_REQUEST_ACCESS_FINE_LOCATION = 1;
     private boolean mLocationPermissionGranted;
@@ -74,15 +85,27 @@ public class MapsActivity extends FragmentActivity
     private String mSearchKey;
     private ArrayList<SearchSuggestion> mSearchSuggestion = new ArrayList<>();
     private Route mRoute = new Route();
-    private LinkedList<Polyline> mAllWalkingRoute = new LinkedList<Polyline>();
+    private ArrayList<Polyline> mAllWalkingRoute = new ArrayList<Polyline>();
+    private Listview listView = new Listview();
+    private ArrayList<String> mData = new ArrayList<String>();
 
     private Location mLastLocation;
     private LatLng mMyLocation;
     private View mapView;
     private FloatingSearchView mSearchView;
+    private JsonArray mBus;
+    Circle circle = null;
+    Polygon polygon = null;
+    Marker marker = null;
+    List<Circle> allCircles = new ArrayList<Circle>();
+    int threadtickscount = 0;
 
+
+    Handler handler = new Handler(Looper.getMainLooper());
     // Keys for storing activity state.
     private static final String DIRECTION_API_KEY = "AIzaSyCfH6jsTdZgxFXMyBkKcsBlBywGxq7UnnQ";
+
+
 
 
 
@@ -163,29 +186,51 @@ public class MapsActivity extends FragmentActivity
      */
     @Override
     public void onMapLongClick(LatLng point) {
-        if (mMarker != null) {
-            mMarker.remove();
+        View fragment = (View) findViewById(R.id.fragment1);
+        if (!listView.getFlag()||fragment.getVisibility()==View.INVISIBLE) {
+            mAllWalkingRoute = listView.getWalkingRoute();
+            if (mMarker != null) {
+                mMarker.remove();
+            }
+            if (mAllWalkingRoute.size() > 0) {
+                for (int i = 0; i < mAllWalkingRoute.size(); i++) {
+                    mAllWalkingRoute.get(i).remove();
+                }
+            }
+            listView.clearRoute();
+            mRoute.draw(mMap);
+            mMarker = mMap.addMarker(new MarkerOptions().position(point).title(point.toString()));
+            View button = findViewById(R.id.gobutton);
+            button.setVisibility(View.VISIBLE);
         }
-        mMarker = mMap.addMarker(new MarkerOptions().position(point).title(point.toString()));
-        View button = findViewById(R.id.gobutton);
-        button.setVisibility(View.VISIBLE);
     }
 
 
     @Override
     public void onMapClick(LatLng point){
-        if(mMarker != null){
-            mMarker.remove();
+        View fragment = (View) findViewById(R.id.fragment1);
+        Button button = (Button) findViewById(R.id.gobutton);
+
+        if(fragment.getVisibility()==View.VISIBLE&&listView.getFlag()==true){
+            fragment.setVisibility(View.INVISIBLE);
+            listView.setValues(mData,mMarker,mMyLocation);
+            listView.update();
+            button.setVisibility(View.VISIBLE);
         }
-        if(mAllWalkingRoute.size()>0) {
-            for (int i = 0; i < mAllWalkingRoute.size(); i++){
-                mAllWalkingRoute.get(i).remove();
+        else /*if(fragment.getVisibility()==View.VISIBLE&&listView.getFlag()==false)*/{
+            mAllWalkingRoute = listView.getWalkingRoute();
+            if (mMarker != null) {
+                mMarker.remove();
             }
+            if (mAllWalkingRoute.size() > 0) {
+                for (int i = 0; i < mAllWalkingRoute.size(); i++) {
+                    mAllWalkingRoute.get(i).remove();
+                }
+            }
+            listView.clearRoute();
+            mRoute.draw(mMap);
+            button.setVisibility(View.INVISIBLE);
         }
-        mAllWalkingRoute.clear();
-        mRoute.draw(mMap);
-        View button = findViewById(R.id.gobutton);
-        button.setVisibility(View.INVISIBLE);
     }
 
 
@@ -248,7 +293,53 @@ public class MapsActivity extends FragmentActivity
     }
 
 
+    private class busLive extends AsyncTask<Void, Void, JsonArray> {
+        private String stringUrl = "http://m.gatech.edu/api/buses/position";
 
+        @Override
+        protected void onPreExecute(){
+        }
+
+        @Override
+        protected JsonArray doInBackground(Void...params) {
+            try{
+                URL url = new URL(stringUrl);
+                URLConnection uc = url.openConnection();
+                uc.setRequestProperty("Accept", "text/html");
+                uc.connect();
+                JsonParser jp = new JsonParser();
+                JsonElement root = jp.parse(new InputStreamReader((InputStream) uc.getContent()));
+                JsonArray jsonArray = root.getAsJsonArray();
+                if(jsonArray.size() > 0) {
+                    return jsonArray;
+                }
+                else
+                    return null;
+            } catch (MalformedURLException e){
+                Log.e("ERROR",e.getMessage(),e);
+                return null;
+            } catch (IOException e){
+                Log.e("ERROR",e.getMessage(),e);
+                return null;
+            }
+
+        }
+
+        @Override
+        protected void onPostExecute(JsonArray result) {
+            JsonObject jObj;
+            mBus = new JsonArray();
+            int s;
+
+            if (result != null) {
+                s = result.size();
+                for (int i = 0; i < s; i++) {
+                    JsonObject bus = result.get(i).getAsJsonObject();
+                    mBus.add(bus);
+                }
+            }
+        }
+    }
     /**
      * Manipulates the map once available.
      * This callback is triggered when the map is ready to be used.
@@ -282,6 +373,10 @@ public class MapsActivity extends FragmentActivity
 
         mRoute.init();
         mRoute.draw(mMap);
+        listView.init(mMap,mRoute);
+
+        /*Intent intent = new Intent(this, list_view.class);
+        startActivity(intent);*/
 
         /*route.drawBetweenStop("trolley","marta_a","recctr",mMap);*/
 
@@ -290,41 +385,214 @@ public class MapsActivity extends FragmentActivity
         DownloadTask downloadTask = new DownloadTask();
         downloadTask.execute(url);*/
 
+        new Handler(Looper.getMainLooper()).post(new Runnable() {
+            @Override
+            public void run() {
+                createCircles();
+
+            }
+        });
+
+        Thread t = new Thread() {
+
+            @Override
+            public void run() {
+                try{
+                    while(true) {
+                        if (threadtickscount <3)
+                            { Thread.sleep(1);}
+                        else
+                        {Thread.sleep(2000);}
+                            runOnUiThread(new Runnable() {
+                                @Override
+                                public void run() {
+                                    new busLive().execute();
+                                    createCircles();
+                                }
+                            });
+                        threadtickscount++;
+                    }
+                }catch (InterruptedException e) {}
+
+            }
+        };
+        t.start();
+
+  /*      Runnable refresh;
+        refresh = new Runnable() {
+
+            public void run() {
+
+                    createCircles();
+            }
+        };
+        handler.postDelayed(refresh,1000);*/
+
     }
 
-    private void setGoButton (){
-        Button button = (Button) findViewById(R.id.gobutton);
-        button.setOnClickListener(new View.OnClickListener(){
-            public void onClick(View v){
-                String start = "ferstdr";
-                String dest = "techsqua_ib";
-                String route_id = "trolley";
-                /*List<PatternItem> pattern = Arrays.<PatternItem>asList(
-                        new Dash(20), new Gap(20));*/
+    private void createCircles() {
+        if (circle != null){
+            circle.remove();
+        }
 
-                mRoute.drawBetweenStop(route_id,start,dest,mMap);
-                if(mAllWalkingRoute.size()>0) {
-                    for (int i = 0; i < mAllWalkingRoute.size(); i++){
-                        mAllWalkingRoute.get(i).remove();
+        if (polygon != null){
+            polygon.remove();
+        }
+        if (mBus != null) {
+            int s;
+            s = mBus.size();
+
+            for (int i = 0; i < s; i++) {
+                String colour = "";
+                boolean realbus = false;
+
+                JsonObject bus = mBus.get(i).getAsJsonObject();
+                Double a = Double.parseDouble(bus.get("lat").toString().substring(0, bus.get("lat").toString().length()));
+                Double b = Double.parseDouble(bus.get("lng").toString().substring(0, bus.get("lng").toString().length()));
+                Double c = Double.parseDouble(bus.get("plat").toString().substring(0, bus.get("plat").toString().length()));
+                Double d = Double.parseDouble(bus.get("plng").toString().substring(0, bus.get("plng").toString().length()));
+
+                //Logic here is that we draw imaginary line, perpendicular to original from-to [(a,b) to (c,d)]
+                //and offset ends of that imaginary perpendicular line by certain amount, which are coordinate alpha and beta
+                Double bearing = computeHeading(new LatLng(a,b),new LatLng(c,d));
+                Double gamma_x = c + Math.cos(bearing)/10000; // gamma is coordinate of to-location, scaled.
+                Double gamma_y = d + Math.sin(bearing)/10000;
+                Double alpha_x = a + Math.cos(bearing+90)/10000; //alpha is one side of bottom of triangular marker
+                Double alpha_y = b + Math.sin(bearing+90)/10000;
+                Double beta_x = a + Math.cos(bearing+270)/10000; // beta is the other side of triangular marker
+                Double beta_y = b + Math.sin(bearing+270)/10000;
+
+                if (bus.get("route").toString().substring(1, bus.get("route").toString().length() - 1).equals("red")) {
+                    colour = "red";
+                    realbus = true;
+                } else if (bus.get("route").toString().substring(1, bus.get("route").toString().length() - 1).equals("blue")) {
+                    colour = "blue";
+                    realbus = true;
+                } else if (bus.get("route").toString().substring(1, bus.get("route").toString().length() - 1).equals("trolley")) {
+                    colour = "yellow";
+                    realbus = true;
+                } else if (bus.get("route").toString().substring(1, bus.get("route").toString().length() - 1).equals("green")) {
+                    colour = "green";
+                    realbus = true;
+                } else if (bus.get("route").toString().substring(1, bus.get("route").toString().length() - 1).equals("express")) {
+                    colour = "black";
+                    realbus = true;
+                }
+
+                if (realbus){
+                    if (colour == "red") {
+                        Bitmap bm = BitmapFactory.decodeResource(getResources(), R.drawable.arrow_red);
+                        Bitmap bmm = Bitmap.createScaledBitmap(bm, 50, 50, true);
+                        marker = mMap.addMarker(new MarkerOptions()
+                                .position(new LatLng(a, b))
+                                .anchor(0.5f, 0.5f)
+                                .rotation(Float.valueOf(String.valueOf(bearing)))
+                                .icon(BitmapDescriptorFactory.fromBitmap(bmm)));
+                    }
+                    else if (colour == "blue"){
+                        Bitmap bm = BitmapFactory.decodeResource(getResources(), R.drawable.arrow_red);
+                        Bitmap bmm = Bitmap.createScaledBitmap(bm, 50, 50, true);
+                        marker = mMap.addMarker(new MarkerOptions()
+                                .position(new LatLng(a, b))
+                                .anchor(0.5f, 0.5f)
+                                .rotation(Float.valueOf(String.valueOf(bearing)))
+                                .icon(BitmapDescriptorFactory.fromBitmap(bmm)));
+                    }
+                    else if (colour == "green"){
+                        Bitmap bm = BitmapFactory.decodeResource(getResources(), R.drawable.arrow_green);
+                        Bitmap bmm = Bitmap.createScaledBitmap(bm, 50, 50, true);
+                        marker = mMap.addMarker(new MarkerOptions()
+                                .position(new LatLng(a, b))
+                                .anchor(0.5f, 0.5f)
+                                .rotation(Float.valueOf(String.valueOf(bearing)))
+                                .icon(BitmapDescriptorFactory.fromBitmap(bmm)));
+                    }
+                    else if (colour == "yellow"){
+                        Bitmap bm = BitmapFactory.decodeResource(getResources(), R.drawable.arrow_yellow);
+                        Bitmap bmm = Bitmap.createScaledBitmap(bm, 50, 50, true);
+                        marker = mMap.addMarker(new MarkerOptions()
+                                .position(new LatLng(a, b))
+                                .anchor(0.5f, 0.5f)
+                                .rotation(Float.valueOf(String.valueOf(bearing)))
+                                .icon(BitmapDescriptorFactory.fromBitmap(bmm)));
+                    }
+                    else if (colour == "black"){
+                        Bitmap bm = BitmapFactory.decodeResource(getResources(), R.drawable.arrow_black);
+                        Bitmap bmm = Bitmap.createScaledBitmap(bm, 50, 50, true);
+                        marker = mMap.addMarker(new MarkerOptions()
+                                .position(new LatLng(a, b))
+                                .anchor(0.5f, 0.5f)
+                                .rotation(Float.valueOf(String.valueOf(bearing)))
+                                .icon(BitmapDescriptorFactory.fromBitmap(bmm)));
                     }
                 }
-                mAllWalkingRoute.clear();
-                drawWalkRoute(mMyLocation,mRoute.getStopLatLng(start,route_id));
-                drawWalkRoute(mRoute.getStopLatLng(dest,route_id),mMarker.getPosition());
+            }
+        }
+        else{}
+    }
 
 
+    private void setGoButton (){
+        final Button button = (Button) findViewById(R.id.gobutton);
+        button.setOnClickListener(new View.OnClickListener(){
+            public void onClick(View v){
+                View fragment = (View) findViewById(R.id.fragment1);
+
+
+
+
+                gatech.nav.Location user = LatLngConvertToLocation(mMyLocation);
+                gatech.nav.Location dest = LatLngConvertToLocation(mMarker.getPosition());
+                new FindRoute().execute(user,dest);
+
+                fragment.setVisibility(View.VISIBLE);
+                button.setVisibility(View.INVISIBLE);
 
             }
         });
     }
 
-    private void drawWalkRoute(LatLng start, LatLng dest){
+    private class FindRoute extends AsyncTask<gatech.nav.Location,Void,ArrayList<String>>{
+        @Override
+        protected void onPreExecute(){
+        }
+
+        @Override
+        protected ArrayList<String> doInBackground(gatech.nav.Location...params) {
+            ArrayList<String> route = null;
+            if(mMarker!=null) {
+                RouteSuggestion routeSuggestion = new RouteSuggestion();
+                route = RouteSuggestion.init(params[0],params[1]);
+            }
+            return route;
+
+        }
+
+        @Override
+        protected void onPostExecute(ArrayList<String> result) {
+            listView.setValues(result,mMarker,mMyLocation);
+            listView.update();
+            View fragment = (View) findViewById(R.id.fragment1);
+            fragment.setVisibility(View.VISIBLE);
+
+
+        }
+    }
+
+    private gatech.nav.Location LatLngConvertToLocation(LatLng latLng){
+        String lat = Double.toString(latLng.latitude);
+        String lon = Double.toString(latLng.longitude);
+        gatech.nav.Location location = new gatech.nav.Location(lat,lon);
+        return location;
+    }
+
+    /*private void drawWalkRoute(LatLng start, LatLng dest){
         String url = getDirectionsUrl(start,dest);
         DownloadTask downloadTask = new DownloadTask();
         downloadTask.execute(url);
-    }
+    }*/
 
-    private String getDirectionsUrl(LatLng origin,LatLng dest){
+    /*public static String getDirectionsUrl(LatLng origin,LatLng dest){
 
         // Origin of route
         String str_origin = "origin="+origin.latitude+","+origin.longitude;
@@ -338,20 +606,8 @@ public class MapsActivity extends FragmentActivity
         //walking mode
         String mode = "mode=walking";
 
-        /*// Waypoints
-        String waypoints = "";
-        for(int i=2;i<markerPoints.size();i++){
-            LatLng point  = (LatLng) markerPoints.get(i);
-            if(i==2)
-                waypoints = "waypoints=";
-            waypoints += point.latitude + "," + point.longitude + "|";
-        }*/
 
-        /*LatLng point = new LatLng(33.782180, -84.391928);
-        String waypoints = "waypoints=";
-        waypoints += point.latitude + "," + point.longitude + "|";*/
-        // Building the parameters to the web service
-        String parameters = str_origin+"&"+str_dest+"&"+sensor + "&" + mode/*+"&"+waypoints*/;
+        String parameters = str_origin+"&"+str_dest+"&"+sensor + "&" + mode*//*+"&"+waypoints*//*;
 
         // Output format
         String output = "json";
@@ -362,7 +618,7 @@ public class MapsActivity extends FragmentActivity
         return url;
     }
 
-    /** A method to download json data from url */
+    *//** A method to download json data from url *//*
     private String downloadUrl(String strUrl) throws IOException{
         String data = "";
         InputStream iStream = null;
@@ -402,7 +658,7 @@ public class MapsActivity extends FragmentActivity
     }
 
     // Fetches data from url passed
-    private class DownloadTask extends AsyncTask<String, Void, String>{
+    public class DownloadTask extends AsyncTask<String, Void, String>{
 
         // Downloading data in non-ui thread
         @Override
@@ -434,7 +690,7 @@ public class MapsActivity extends FragmentActivity
         }
     }
 
-    /** A class to parse the Google Places in JSON format */
+    *//** A class to parse the Google Places in JSON format *//*
     private class ParserTask extends AsyncTask<String, Integer, List<List<HashMap<String,String>>> >{
 
         // Parsing the data in non-ui thread
@@ -488,9 +744,9 @@ public class MapsActivity extends FragmentActivity
                 lineOptions.color(Color.BLUE);
                 List<PatternItem> pattern = Arrays.<PatternItem>asList(
                         new Dash(20), new Gap(20));
-               /* mWalkingRoute = mMap.addPolyline(mPolylineOptions);
-                mWalkingRoute.setPattern(pattern);*//*
-                //}*/
+               *//* mWalkingRoute = mMap.addPolyline(mPolylineOptions);
+                mWalkingRoute.setPattern(pattern);*//**//*
+                //}*//*
                 mAllWalkingRoute.add(mMap.addPolyline(lineOptions));
                 mAllWalkingRoute.get(mAllWalkingRoute.size()-1).setPattern(pattern);
             }
@@ -498,7 +754,7 @@ public class MapsActivity extends FragmentActivity
             // Drawing polyline in the Google Map for the i-th route
 
         }
-    }
+    }*/
 
 
 
@@ -529,22 +785,22 @@ public class MapsActivity extends FragmentActivity
         });
 
         mSearchView.setOnSearchListener(new FloatingSearchView.OnSearchListener() {
-                                            @Override
-                                            public void onSuggestionClicked(SearchSuggestion searchSuggestion) {
-                                                BuildingSuggestion buildingSuggestion = (BuildingSuggestion) searchSuggestion;
-                                                if(mMarker != null)
-                                                    mMarker.remove();
-                                                mMarker = mMap.addMarker(new MarkerOptions().position(buildingSuggestion.getLatLng()).title(buildingSuggestion.getBody()).snippet(buildingSuggestion.getAddress()));
-                                                View button = findViewById(R.id.gobutton);
-                                                button.setVisibility(View.VISIBLE);
-                                                mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(buildingSuggestion.getLatLng(), 16));
-                                            }
+            @Override
+            public void onSuggestionClicked(SearchSuggestion searchSuggestion) {
+                BuildingSuggestion buildingSuggestion = (BuildingSuggestion) searchSuggestion;
+                if(mMarker != null)
+                    mMarker.remove();
+                mMarker = mMap.addMarker(new MarkerOptions().position(buildingSuggestion.getLatLng()).title(buildingSuggestion.getBody()).snippet(buildingSuggestion.getAddress()));
+                View button = findViewById(R.id.gobutton);
+                button.setVisibility(View.VISIBLE);
+                mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(buildingSuggestion.getLatLng(), 16));
+            }
 
-                                            @Override
-                                            public void onSearchAction(String currentQuery) {
+            @Override
+            public void onSearchAction(String currentQuery) {
 
-                                            }
-                                        });
+            }
+        });
 
     }
 

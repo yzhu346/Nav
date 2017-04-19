@@ -1,7 +1,6 @@
 package gatech.nav;
 
 import android.graphics.Color;
-import android.graphics.RadialGradient;
 
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.model.Circle;
@@ -57,52 +56,64 @@ public class Route {
 
     private final int mWIDTH = 10;
     private final int mSTOP_RADIUS = 6;
+    private BusSchedule busSchedule = new BusSchedule();
 
     public void draw(GoogleMap map){
         clearAll();
-        for(int i = 0; i < mExpress_Stop_Number ; i++){
-            Express_Polyline.add(map.addPolyline(Express[i]));
-            Express_Circle.add(map.addCircle(new CircleOptions()
-                    .center(Express_stop_position.get(i))
-                    .radius(mSTOP_RADIUS)
-                    .strokeColor(Color.WHITE)
-                    .fillColor(android.graphics.Color.rgb(0x33,0x33,0x33))));
+        busSchedule.init();
+        if(BusSchedule.getExpress()) {
+            for (int i = 0; i < mExpress_Stop_Number; i++) {
+                Express_Polyline.add(map.addPolyline(Express[i]));
+                Express_Circle.add(map.addCircle(new CircleOptions()
+                        .center(Express_stop_position.get(i))
+                        .radius(mSTOP_RADIUS)
+                        .strokeColor(Color.WHITE)
+                        .fillColor(android.graphics.Color.rgb(0x33, 0x33, 0x33))));
+            }
         }
 
-        for(int i = 0; i < mTrolley_Stop_Number ; i++){
-            Trolley_Polyline.add(map.addPolyline(Trolley[i]));
-            Trolley_Circle.add(map.addCircle(new CircleOptions()
-                    .center(Trolley_stop_position.get(i))
-                    .radius(mSTOP_RADIUS)
-                    .strokeColor(Color.WHITE)
-                    .fillColor(android.graphics.Color.rgb(0xff,0xcc,0x00))));
+        if(BusSchedule.getTrolley()) {
+            for (int i = 0; i < mTrolley_Stop_Number; i++) {
+                Trolley_Polyline.add(map.addPolyline(Trolley[i]));
+                Trolley_Circle.add(map.addCircle(new CircleOptions()
+                        .center(Trolley_stop_position.get(i))
+                        .radius(mSTOP_RADIUS)
+                        .strokeColor(Color.WHITE)
+                        .fillColor(android.graphics.Color.rgb(0xff, 0xcc, 0x00))));
+            }
         }
 
-        for(int i = 0; i < mBlue_Stop_Number ; i++){
-            Blue_Polyline.add(map.addPolyline(Blue[i]));
-            Blue_Circle.add(map.addCircle(new CircleOptions()
-                    .center(Blue_stop_position.get(i))
-                    .radius(mSTOP_RADIUS)
-                    .strokeColor(Color.WHITE)
-                    .fillColor(android.graphics.Color.rgb(0x00,0x00,0xff))));
+        if(BusSchedule.getBlue()) {
+            for (int i = 0; i < mBlue_Stop_Number; i++) {
+                Blue_Polyline.add(map.addPolyline(Blue[i]));
+                Blue_Circle.add(map.addCircle(new CircleOptions()
+                        .center(Blue_stop_position.get(i))
+                        .radius(mSTOP_RADIUS)
+                        .strokeColor(Color.WHITE)
+                        .fillColor(android.graphics.Color.rgb(0x00, 0x00, 0xff))));
+            }
         }
 
-        for(int i = 0; i < mRed_Stop_Number ; i++){
-            Red_Polyline.add(map.addPolyline(Red[i]));
-            Red_Circle.add(map.addCircle(new CircleOptions()
-                    .center(Red_stop_position.get(i))
-                    .radius(mSTOP_RADIUS)
-                    .strokeColor(Color.WHITE)
-                    .fillColor(android.graphics.Color.rgb(0xff,0x11,0x00))));
+        if(BusSchedule.getRed()) {
+            for (int i = 0; i < mRed_Stop_Number; i++) {
+                Red_Polyline.add(map.addPolyline(Red[i]));
+                Red_Circle.add(map.addCircle(new CircleOptions()
+                        .center(Red_stop_position.get(i))
+                        .radius(mSTOP_RADIUS)
+                        .strokeColor(Color.WHITE)
+                        .fillColor(android.graphics.Color.rgb(0xff, 0x11, 0x00))));
+            }
         }
 
-        for(int i = 0; i < mGreen_Stop_Number ; i++){
-            Green_Polyline.add(map.addPolyline(Green[i]));
-            Green_Circle.add(map.addCircle(new CircleOptions()
-                    .center(Green_stop_position.get(i))
-                    .radius(mSTOP_RADIUS)
-                    .strokeColor(Color.WHITE)
-                    .fillColor(android.graphics.Color.rgb(0x00,0xcc,0x66))));
+        if(BusSchedule.getGreen()) {
+            for (int i = 0; i < mGreen_Stop_Number; i++) {
+                Green_Polyline.add(map.addPolyline(Green[i]));
+                Green_Circle.add(map.addCircle(new CircleOptions()
+                        .center(Green_stop_position.get(i))
+                        .radius(mSTOP_RADIUS)
+                        .strokeColor(Color.WHITE)
+                        .fillColor(android.graphics.Color.rgb(0x00, 0xcc, 0x66))));
+            }
         }
 
     }
@@ -322,11 +333,11 @@ public class Route {
          * ***********************************************************************************************************
          * ***********************************************************************************************************
          */
-        Express_stop.add("clough");
+        Express_stop.add("cloucomm");
         Express_stop_position.add(new LatLng(33.7753,-84.39611));
-        Express_stop.add("techsqua_ib");
+        Express_stop.add("techsqua_ob");
         Express_stop_position.add(new LatLng(33.7768,-84.38975));
-        Express_stop.add("87");
+        Express_stop.add("duprmrt");
         Express_stop_position.add(new LatLng(33.77678,-84.38749));
         Express_stop.add("techsqua");
         Express_stop_position.add(new LatLng(33.77692,-84.38978));
@@ -1866,7 +1877,7 @@ public class Route {
          */
         Green_stop.add("tranhub");
         Green_stop_position.add(new LatLng(33.773226,-84.397016));
-        Green_stop.add("centrstud");
+        Green_stop.add("studcent_ib");
         Green_stop_position.add(new LatLng(33.77335,-84.39917));
         Green_stop.add("creccent");
         Green_stop_position.add(new LatLng(33.774997,-84.402359));
