@@ -16,7 +16,7 @@ import java.net.URLConnection;
 public class travel_time {
 
 
-    public static int travel(String route_id, BusStop bussget_on, BusStop bussget_off, Location start_point) throws Exception {
+    public static int bustravel(String route_id, BusStop bussget_on, BusStop bussget_off, Location start_point) throws Exception {
         final String main = "https://gtbuses.herokuapp.com/multiPredictions?stops=";
         int travel_time=0;
         String path = main + route_id + "|" + bussget_on.getStopid();
@@ -52,9 +52,7 @@ public class travel_time {
                                     travel_time = Integer.parseInt(arrive_time) - wait_time;
                                     //System.out.println(travel_time);
                                     break;
-
                                 }
-
 
                             }
 
@@ -67,7 +65,7 @@ public class travel_time {
 
             }
         }
-        System.out.println("the bus takes: " + travel_time);
+        //System.out.println("the bus takes: " + travel_time);
         return travel_time;
     }
 
@@ -76,7 +74,7 @@ public class travel_time {
         String url2 = "&destinations=";
         String url3 = "&departure_time=now&traffic_model=best_guess&mode=walking&key=AIzaSyDfdmZLnPimkOIVckgLyJLtLRmXE5dEKhg";
         String path = url1 + start_point.getLatitude() + "," + start_point.getLongitude()+ url2 + end_point.getLatitude() + "," + end_point.getLongitude()+ url3;
-        System.out.println(path);
+        //System.out.println(path);
         URL url = new URL(path);
         URLConnection connection = url.openConnection();
         Document doc = parseXML(connection.getInputStream());
@@ -88,7 +86,7 @@ public class travel_time {
             NodeList text = eElement.getElementsByTagName("text");
             Element textElm = (Element) text.item(0);
             Node textNode = textElm.getChildNodes().item(0);
-            System.out.println("distance : " + textNode.getNodeValue());
+            //System.out.println("distance : " + textNode.getNodeValue());
             NodeList mList = doc.getElementsByTagName("duration");
             Node mNode = mList.item(0);
             if (mNode.getNodeType() == Node.ELEMENT_NODE) {
@@ -102,7 +100,7 @@ public class travel_time {
                 walk_time = Integer.parseInt(group[0])*60;
             }
         }
-        System.out.println("the walking takes: " + walk_time);
+        //System.out.println("the walking takes: " + walk_time);
         return walk_time;
     }
 

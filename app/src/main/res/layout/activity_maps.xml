@@ -77,7 +77,7 @@
 
         <fragment
             android:id="@+id/fragment1"
-            android:name="gatech.nav.ListView"
+            android:name="gatech.nav.Listview"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             />
