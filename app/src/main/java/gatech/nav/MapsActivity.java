@@ -5,8 +5,6 @@ import android.graphics.Bitmap;
 
 import android.location.Location;
 import android.os.AsyncTask;
-import android.os.Handler;
-import android.os.Looper;
 import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.FragmentActivity;
@@ -27,12 +25,10 @@ import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.BitmapDescriptorFactory;
-import com.google.android.gms.maps.model.Circle;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.location.LocationServices;
-import com.google.android.gms.maps.model.Polygon;
 import com.google.android.gms.maps.model.Polyline;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
@@ -83,21 +79,9 @@ public class MapsActivity extends FragmentActivity
     private FloatingSearchView mSearchView;
     private JsonArray mBus;
     private JsonArray resultArray;
-    Circle circle = null;
-    Polygon polygon = null;
     Marker marker;
-    List<Circle> allCircles = new ArrayList<Circle>();
     int threadtickscount = 0;
     private List<Marker> markerList = new ArrayList<Marker>();
-
-    Handler handler = new Handler(Looper.getMainLooper());
-    // Keys for storing activity state.
-    private static final String DIRECTION_API_KEY = "AIzaSyCfH6jsTdZgxFXMyBkKcsBlBywGxq7UnnQ";
-
-
-
-
-
 
 
     @Override
@@ -105,12 +89,7 @@ public class MapsActivity extends FragmentActivity
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_maps);
 
-
         // Retrieve location and camera position from saved instance state.
-        /*if (savedInstanceState != null) {
-            mLastLocation = savedInstanceState.getParcelable(KEY_LOCATION);
-            mCameraPosition = savedInstanceState.getParcelable(KEY_CAMERA_POSITION);
-        }*/
 
         if (mGoogleApiClient == null) {
             mGoogleApiClient = new GoogleApiClient.Builder(this)
@@ -378,24 +357,6 @@ public class MapsActivity extends FragmentActivity
         mRoute.init();
         mRoute.draw(mMap);
         listView.init(mMap,mRoute);
-
-        /*Intent intent = new Intent(this, list_view.class);
-        startActivity(intent);*/
-
-        /*route.drawBetweenStop("trolley","marta_a","recctr",mMap);*/
-
-        /*markerPoints = new ArrayList<LatLng>();*/
-        /*String url = getDirectionsUrl(new LatLng(33.7751,-84.40259),new LatLng(33.77335,-84.39917));
-        DownloadTask downloadTask = new DownloadTask();
-        downloadTask.execute(url);*/
-
-      /*  new Handler(Looper.getMainLooper()).post(new Runnable() {
-            @Override
-            public void run() {
-                createCircles();
-
-            }
-        });*/
 
 
         Thread t = new Thread() {

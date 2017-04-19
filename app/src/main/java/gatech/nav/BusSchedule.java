@@ -12,9 +12,6 @@ public class BusSchedule {
     private static boolean Green = false;
     private static boolean Blue = false;
 
-    private static String Time;
-    private static String date_L;
-    private static String currentDateTimeString;
     private static Calendar c;
     private static int weekday;  //Sun->1;Mon->2;Tue->3;Wed->4;Thur->5;Fri->6;Sat->7;
     private static int timeNow;
