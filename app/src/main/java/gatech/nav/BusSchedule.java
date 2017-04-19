@@ -1,10 +1,6 @@
 package gatech.nav;
 
-import java.sql.Time;
 import java.util.Calendar;
-import java.util.Date;
-import java.text.DateFormat;
-import android.widget.TextView;
 /**
  * Created by yzhu3 on 4/16/2017.
  */

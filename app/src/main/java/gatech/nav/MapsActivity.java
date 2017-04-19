@@ -1,13 +1,7 @@
 package gatech.nav;
 
-import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
-import android.graphics.Canvas;
-import android.graphics.Color;
-
-import android.graphics.drawable.Drawable;
-import android.icu.text.DateFormat;
 
 import android.location.Location;
 import android.os.AsyncTask;
@@ -34,38 +28,24 @@ import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.Circle;
-import com.google.android.gms.maps.model.CircleOptions;
-import com.google.android.gms.maps.model.Dash;
-import com.google.android.gms.maps.model.Gap;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.location.LocationServices;
-import com.google.android.gms.maps.model.PatternItem;
 import com.google.android.gms.maps.model.Polygon;
-import com.google.android.gms.maps.model.PolygonOptions;
 import com.google.android.gms.maps.model.Polyline;
-import com.google.android.gms.maps.model.PolylineOptions;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
-import com.google.maps.android.SphericalUtil;
-import org.json.JSONObject;
 
-import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLConnection;
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Calendar;
 
@@ -445,38 +425,26 @@ public class MapsActivity extends FragmentActivity
         };
         t.start();
 
-  /*      Runnable refresh;
-        refresh = new Runnable() {
-
-            public void run() {
-
-                    createCircles();
-            }
-        };
-        handler.postDelayed(refresh,1000);*/
 
     }
 
     private void createCircles() {
 
 
-        if (markerList != null){
+        if (markerList != null ){
             for (Marker marker : markerList){
-                marker.remove();}
+                if (marker != null)
+                {marker.remove();}
+            }
         }
 
         if (mBus != null) {
             int s;
             s = mBus.size();
 
-           /* for (int j = 0; j < s; j++)
-            {
-                if (marker != null){
-                    marker.remove();
-                }
-            }*/
-
             for (int i = 0; i < s; i++) {
+                BusSchedule busSchedule = new BusSchedule();
+                busSchedule.init();
                 String colour = "";
                 boolean realbus = false;
 
@@ -499,19 +467,24 @@ public class MapsActivity extends FragmentActivity
 */
                 if (bus.get("route").toString().substring(1, bus.get("route").toString().length() - 1).equals("red")) {
                     colour = "red";
-                    realbus = true;
+                    if (BusSchedule.getRed())
+                    {realbus = true;}
                 } else if (bus.get("route").toString().substring(1, bus.get("route").toString().length() - 1).equals("blue")) {
                     colour = "blue";
-                    realbus = true;
+                    if (BusSchedule.getBlue())
+                    { realbus = true;}
                 } else if (bus.get("route").toString().substring(1, bus.get("route").toString().length() - 1).equals("trolley")) {
                     colour = "yellow";
-                    realbus = true;
+                    if (BusSchedule.getTrolley())
+                    {realbus = true;}
                 } else if (bus.get("route").toString().substring(1, bus.get("route").toString().length() - 1).equals("green")) {
                     colour = "green";
-                    realbus = true;
+                    if (BusSchedule.getGreen())
+                    {realbus = true;}
                 } else if (bus.get("route").toString().substring(1, bus.get("route").toString().length() - 1).equals("express")) {
                     colour = "black";
-                    realbus = true;
+                    if (BusSchedule.getExpress())
+                    {realbus = true;}
                 }
 
                 if (realbus){
@@ -823,8 +796,21 @@ public class MapsActivity extends FragmentActivity
             @Override
             public void onSuggestionClicked(SearchSuggestion searchSuggestion) {
                 BuildingSuggestion buildingSuggestion = (BuildingSuggestion) searchSuggestion;
-                if(mMarker != null)
+
+                mAllWalkingRoute = listView.getWalkingRoute();
+                if (mMarker != null) {
                     mMarker.remove();
+                }
+                if (mAllWalkingRoute.size() > 0) {
+                    for (int i = 0; i < mAllWalkingRoute.size(); i++) {
+                        mAllWalkingRoute.get(i).remove();
+                    }
+                    listView.clearRoute();
+                }
+
+                mRoute.draw(mMap);
+
+
                 mMarker = mMap.addMarker(new MarkerOptions().position(buildingSuggestion.getLatLng()).title(buildingSuggestion.getBody()).snippet(buildingSuggestion.getAddress()));
                 View button = findViewById(R.id.gobutton);
                 button.setVisibility(View.VISIBLE);

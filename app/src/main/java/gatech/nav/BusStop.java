@@ -1,6 +1,5 @@
 package gatech.nav;
 
-import java.util.*;
 import java.lang.*;
 
 /**

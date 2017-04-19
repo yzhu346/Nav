@@ -6,8 +6,6 @@ package gatech.nav; /**
 
 import java.util.*;
 import java.lang.*;
-import java.io.File;
-import java.io.FileNotFoundException;
 
 
 public class RouteSuggestion {
