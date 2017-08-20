@@ -56,12 +56,10 @@ public class Route {
 
     private final int mWIDTH = 10;
     private final int mSTOP_RADIUS = 6;
-    private BusSchedule busSchedule = new BusSchedule();
+
 
     public void draw(GoogleMap map){
         clearAll();
-        busSchedule.init();
-        if(BusSchedule.getExpress()) {
             for (int i = 0; i < mExpress_Stop_Number; i++) {
                 Express_Polyline.add(map.addPolyline(Express[i]));
                 Express_Circle.add(map.addCircle(new CircleOptions()
@@ -70,9 +68,8 @@ public class Route {
                         .strokeColor(Color.WHITE)
                         .fillColor(android.graphics.Color.rgb(0x33, 0x33, 0x33))));
             }
-        }
 
-        if(BusSchedule.getTrolley()) {
+
             for (int i = 0; i < mTrolley_Stop_Number; i++) {
                 Trolley_Polyline.add(map.addPolyline(Trolley[i]));
                 Trolley_Circle.add(map.addCircle(new CircleOptions()
@@ -81,9 +78,8 @@ public class Route {
                         .strokeColor(Color.WHITE)
                         .fillColor(android.graphics.Color.rgb(0xff, 0xcc, 0x00))));
             }
-        }
 
-        if(BusSchedule.getBlue()) {
+
             for (int i = 0; i < mBlue_Stop_Number; i++) {
                 Blue_Polyline.add(map.addPolyline(Blue[i]));
                 Blue_Circle.add(map.addCircle(new CircleOptions()
@@ -92,9 +88,8 @@ public class Route {
                         .strokeColor(Color.WHITE)
                         .fillColor(android.graphics.Color.rgb(0x00, 0x00, 0xff))));
             }
-        }
 
-        if(BusSchedule.getRed()) {
+
             for (int i = 0; i < mRed_Stop_Number; i++) {
                 Red_Polyline.add(map.addPolyline(Red[i]));
                 Red_Circle.add(map.addCircle(new CircleOptions()
@@ -103,9 +98,8 @@ public class Route {
                         .strokeColor(Color.WHITE)
                         .fillColor(android.graphics.Color.rgb(0xff, 0x11, 0x00))));
             }
-        }
 
-        if(BusSchedule.getGreen()) {
+
             for (int i = 0; i < mGreen_Stop_Number; i++) {
                 Green_Polyline.add(map.addPolyline(Green[i]));
                 Green_Circle.add(map.addCircle(new CircleOptions()
@@ -113,7 +107,7 @@ public class Route {
                         .radius(mSTOP_RADIUS)
                         .strokeColor(Color.WHITE)
                         .fillColor(android.graphics.Color.rgb(0x00, 0xcc, 0x66))));
-            }
+
         }
 
     }

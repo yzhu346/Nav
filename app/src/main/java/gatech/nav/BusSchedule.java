@@ -72,7 +72,7 @@ public class BusSchedule {
             Green = false;
             Blue = false;
         }
-        else if(weekday==6)
+        else if(weekday==7)
         {
             Express = false;
             if(timeNow<(18.5*3600)&&timeNow>(10*3600))
