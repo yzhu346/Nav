@@ -109,7 +109,6 @@ public class Listview extends Fragment implements AdapterView.OnItemClickListene
 
     @Override
     public void onItemClick(AdapterView<?> parent, View view, int position, long id){
-        //Toast.makeText(getActivity(),"Item: " + position, Toast.LENGTH_SHORT).show();
         String r = values.get(position);
 
         String start_stop = new String();

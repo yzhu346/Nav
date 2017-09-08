@@ -1,8 +1,5 @@
 package gatech.nav;
 
-import android.content.Context;
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.graphics.Color;
 
 import com.google.android.gms.maps.GoogleMap;
@@ -79,13 +76,6 @@ public class Route {
                         .title(Express_stop.get(i)));
                 markerList.add(marker);
 
-/*
-                Express_Circle.add(map.addCircle(new CircleOptions()
-                        .center(Express_stop_position.get(i))
-                        .radius(mSTOP_RADIUS)
-                        .strokeColor(Color.WHITE)
-                        .fillColor(android.graphics.Color.rgb(0x33, 0x33, 0x33))));
-*/
             }
 
 
@@ -97,13 +87,6 @@ public class Route {
                         .title(Trolley_stop.get(i)));
                 markerList.add(marker);
 
-/*
-                Trolley_Circle.add(map.addCircle(new CircleOptions()
-                        .center(Trolley_stop_position.get(i))
-                        .radius(mSTOP_RADIUS)
-                        .strokeColor(Color.WHITE)
-                        .fillColor(android.graphics.Color.rgb(0xff, 0xcc, 0x00))));
-*/
             }
 
 
@@ -115,14 +98,6 @@ public class Route {
                         .title(Blue_stop.get(i)));
                 markerList.add(marker);
 
-
-/*
-                Blue_Circle.add(map.addCircle(new CircleOptions()
-                        .center(Blue_stop_position.get(i))
-                        .radius(mSTOP_RADIUS)
-                        .strokeColor(Color.WHITE)
-                        .fillColor(android.graphics.Color.rgb(0x00, 0x00, 0xff))));
-*/
             }
 
 
@@ -134,14 +109,6 @@ public class Route {
                         .title(Red_stop.get(i)));
                 markerList.add(marker);
 
-
-/*
-                Red_Circle.add(map.addCircle(new CircleOptions()
-                        .center(Red_stop_position.get(i))
-                        .radius(mSTOP_RADIUS)
-                        .strokeColor(Color.WHITE)
-                        .fillColor(android.graphics.Color.rgb(0xff, 0x11, 0x00))));
-*/
             }
 
 
@@ -153,14 +120,6 @@ public class Route {
                         .title(Green_stop.get(i)));
                 markerList.add(marker);
 
-
-/*
-                Green_Circle.add(map.addCircle(new CircleOptions()
-                        .center(Green_stop_position.get(i))
-                        .radius(mSTOP_RADIUS)
-                        .strokeColor(Color.WHITE)
-                        .fillColor(android.graphics.Color.rgb(0x00, 0xcc, 0x66))));
-*/
 
         }
 

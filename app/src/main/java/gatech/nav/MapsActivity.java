@@ -3,7 +3,6 @@ package gatech.nav;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 
-import android.graphics.Color;
 import android.location.Location;
 import android.os.AsyncTask;
 import android.support.annotation.NonNull;
@@ -28,13 +27,11 @@ import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.BitmapDescriptorFactory;
-import com.google.android.gms.maps.model.CircleOptions;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.maps.model.Polyline;
-import com.google.android.gms.maps.model.PolylineOptions;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
@@ -200,7 +197,7 @@ public class MapsActivity extends FragmentActivity
             listView.update();
             button.setVisibility(View.VISIBLE);
         }
-        else /*if(fragment.getVisibility()==View.VISIBLE&&listView.getFlag()==false)*/{
+        else {
             mAllWalkingRoute = listView.getWalkingRoute();
             if (mMarker != null) {
                 mMarker.remove();
@@ -351,8 +348,6 @@ public class MapsActivity extends FragmentActivity
     public void onMapReady(GoogleMap googleMap) {
         mMap = googleMap;
 
-        // Add a marker in Sydney and move the camera
-        //LatLng sydney = new LatLng(-34, 151);
         Log.d(TAG, "onSearchTextChanged()");
 
 
@@ -432,17 +427,10 @@ public class MapsActivity extends FragmentActivity
                 Double c = Double.parseDouble(bus.get("plat").toString().substring(0, bus.get("plat").toString().length()));
                 Double d = Double.parseDouble(bus.get("plng").toString().substring(0, bus.get("plng").toString().length()));
 
-                //Logic here is that we draw imaginary line, perpendicular to original from-to [(a,b) to (c,d)]
-                //and offset ends of that imaginary perpendicular line by certain amount, which are coordinate alpha and beta
+
                 Double bearing = computeHeading(new LatLng(a,b),new LatLng(c,d));
 
-         /*       Double gamma_x = c + Math.cos(bearing)/10000; // gamma is coordinate of to-location, scaled.
-                Double gamma_y = d + Math.sin(bearing)/10000;
-                Double alpha_x = a + Math.cos(bearing+90)/10000; //alpha is one side of bottom of triangular marker
-                Double alpha_y = b + Math.sin(bearing+90)/10000;
-                Double beta_x = a + Math.cos(bearing+270)/10000; // beta is the other side of triangular marker
-                Double beta_y = b + Math.sin(bearing+270)/10000;
-*/
+
                 if (bus.get("route").toString().substring(1, bus.get("route").toString().length() - 1).equals("red")) {
                     colour = "red";
                     if (BusSchedule.getRed())
@@ -586,179 +574,6 @@ public class MapsActivity extends FragmentActivity
         return location;
     }
 
-    /*private void drawWalkRoute(LatLng start, LatLng dest){
-        String url = getDirectionsUrl(start,dest);
-        DownloadTask downloadTask = new DownloadTask();
-        downloadTask.execute(url);
-    }*/
-
-    /*public static String getDirectionsUrl(LatLng origin,LatLng dest){
-
-        // Origin of route
-        String str_origin = "origin="+origin.latitude+","+origin.longitude;
-
-        // Destination of route
-        String str_dest = "destination="+dest.latitude+","+dest.longitude;
-
-        // Sensor enabled
-        String sensor = "sensor=false";
-
-        //walking mode
-        String mode = "mode=walking";
-
-
-        String parameters = str_origin+"&"+str_dest+"&"+sensor + "&" + mode*//*+"&"+waypoints*//*;
-
-        // Output format
-        String output = "json";
-
-        // Building the url to the web service
-        String url = "https://maps.googleapis.com/maps/api/directions/"+output+"?"+parameters;
-
-        return url;
-    }
-
-    *//** A method to download json data from url *//*
-    private String downloadUrl(String strUrl) throws IOException{
-        String data = "";
-        InputStream iStream = null;
-        HttpURLConnection urlConnection = null;
-        try{
-            URL url = new URL(strUrl);
-
-            // Creating an http connection to communicate with url
-            urlConnection = (HttpURLConnection) url.openConnection();
-
-            // Connecting to url
-            urlConnection.connect();
-
-            // Reading data from url
-            iStream = urlConnection.getInputStream();
-
-            BufferedReader br = new BufferedReader(new InputStreamReader(iStream));
-
-            StringBuffer sb  = new StringBuffer();
-
-            String line = "";
-            while( ( line = br.readLine())  != null){
-                sb.append(line);
-            }
-
-            data = sb.toString();
-
-            br.close();
-
-        }catch(Exception e){
-            Log.d("Exception download url", e.toString());
-        }finally{
-            iStream.close();
-            urlConnection.disconnect();
-        }
-        return data;
-    }
-
-    // Fetches data from url passed
-    public class DownloadTask extends AsyncTask<String, Void, String>{
-
-        // Downloading data in non-ui thread
-        @Override
-        protected String doInBackground(String... url) {
-
-            // For storing data from web service
-
-            String data = "";
-
-            try{
-                // Fetching the data from web service
-                data = downloadUrl(url[0]);
-            }catch(Exception e){
-                Log.d("Background Task",e.toString());
-            }
-            return data;
-        }
-
-        // Executes in UI thread, after the execution of
-        // doInBackground()
-        @Override
-        protected void onPostExecute(String result) {
-            super.onPostExecute(result);
-
-            ParserTask parserTask = new ParserTask();
-
-            // Invokes the thread for parsing the JSON data
-            parserTask.execute(result);
-        }
-    }
-
-    *//** A class to parse the Google Places in JSON format *//*
-    private class ParserTask extends AsyncTask<String, Integer, List<List<HashMap<String,String>>> >{
-
-        // Parsing the data in non-ui thread
-        @Override
-        protected List<List<HashMap<String, String>>> doInBackground(String... jsonData) {
-
-            JSONObject jObject;
-            List<List<HashMap<String, String>>> routes = null;
-
-            try{
-                jObject = new JSONObject(jsonData[0]);
-                DirectionsJSONParser parser = new DirectionsJSONParser();
-
-                // Starts parsing data
-                routes = parser.parse(jObject);
-            }catch(Exception e){
-                e.printStackTrace();
-            }
-            return routes;
-        }
-
-        // Executes in UI thread, after the parsing process
-        @Override
-        protected void onPostExecute(List<List<HashMap<String, String>>> result) {
-
-            ArrayList<LatLng> points = null;
-            PolylineOptions lineOptions = null;
-
-            // Traversing through all the routes
-            for(int i=0;i<result.size();i++){
-                points = new ArrayList<LatLng>();
-                lineOptions = new PolylineOptions();
-
-                // Fetching i-th route
-                List<HashMap<String, String>> path = result.get(i);
-
-                // Fetching all the points in i-th route
-                for(int j=0;j<path.size();j++){
-                    HashMap<String,String> point = path.get(j);
-
-                    double lat = Double.parseDouble(point.get("lat"));
-                    double lng = Double.parseDouble(point.get("lng"));
-                    LatLng position = new LatLng(lat, lng);
-
-                    points.add(position);
-                }
-
-                // Adding all the points in the route to LineOptions
-                lineOptions.addAll(points);
-                lineOptions.width(10);
-                lineOptions.color(Color.BLUE);
-                List<PatternItem> pattern = Arrays.<PatternItem>asList(
-                        new Dash(20), new Gap(20));
-               *//* mWalkingRoute = mMap.addPolyline(mPolylineOptions);
-                mWalkingRoute.setPattern(pattern);*//**//*
-                //}*//*
-                mAllWalkingRoute.add(mMap.addPolyline(lineOptions));
-                mAllWalkingRoute.get(mAllWalkingRoute.size()-1).setPattern(pattern);
-            }
-
-            // Drawing polyline in the Google Map for the i-th route
-
-        }
-    }*/
-
-
-
-
 
 
     private void setSearchBar(){
@@ -775,11 +590,6 @@ public class MapsActivity extends FragmentActivity
                     new buildingSearch().execute();
                     mSearchView.hideProgress();
                 }
-                //get suggestions based on newQuery
-
-
-                //pass them on to the search view
-               /* mSearchView.swapSuggestions(mSearchSuggestion);*/
 
             }
         });
