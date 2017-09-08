@@ -15,6 +15,8 @@ import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
+import android.widget.ImageButton;
+import android.widget.ImageView;
 import android.widget.RelativeLayout;
 
 import com.arlib.floatingsearchview.FloatingSearchView;
@@ -69,6 +71,7 @@ public class MapsActivity extends FragmentActivity
     private static final int DEFAULT_ZOOM = 15;
     private static final int PERMISSIONS_REQUEST_ACCESS_FINE_LOCATION = 1;
     private boolean mLocationPermissionGranted;
+    private boolean mSearching = false;
     private Marker mMarker;
     private String mSearchKey;
     private ArrayList<SearchSuggestion> mSearchSuggestion = new ArrayList<>();
@@ -175,6 +178,14 @@ public class MapsActivity extends FragmentActivity
             View button = findViewById(R.id.gobutton);
             button.setVisibility(View.VISIBLE);
         }
+
+
+        gatech.nav.Location user = LatLngConvertToLocation(mMyLocation);
+        gatech.nav.Location dest = LatLngConvertToLocation(mMarker.getPosition());
+        new FindRoute().execute(user,dest);
+
+        fragment.setVisibility(View.VISIBLE);
+        //button.setVisibility(View.INVISIBLE);
     }
 
 
@@ -351,6 +362,7 @@ public class MapsActivity extends FragmentActivity
 
         mMap.setOnMapLongClickListener(this);
         mMap.setOnMapClickListener(this);
+        mMap.getUiSettings().setMapToolbarEnabled(false);
 
         mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(mMyLocation, DEFAULT_ZOOM));
         mMap.setMapType(GoogleMap.MAP_TYPE_NORMAL);
@@ -392,8 +404,6 @@ public class MapsActivity extends FragmentActivity
 
 
     }
-
-
 
 
     private void createCircles() {
@@ -517,12 +527,19 @@ public class MapsActivity extends FragmentActivity
 
 
 
-                gatech.nav.Location user = LatLngConvertToLocation(mMyLocation);
+                /*gatech.nav.Location user = LatLngConvertToLocation(mMyLocation);
                 gatech.nav.Location dest = LatLngConvertToLocation(mMarker.getPosition());
                 new FindRoute().execute(user,dest);
 
                 fragment.setVisibility(View.VISIBLE);
+                button.setVisibility(View.INVISIBLE);*/
                 button.setVisibility(View.INVISIBLE);
+                if(mSearching == false){
+                    fragment.setVisibility(View.VISIBLE);
+                }
+                else {
+                    fragment.setVisibility(View.INVISIBLE);
+                }
 
             }
         });
@@ -531,6 +548,7 @@ public class MapsActivity extends FragmentActivity
     private class FindRoute extends AsyncTask<gatech.nav.Location,Void,ArrayList<String>>{
         @Override
         protected void onPreExecute(){
+            mSearching = true;
         }
 
         @Override
@@ -548,10 +566,16 @@ public class MapsActivity extends FragmentActivity
         protected void onPostExecute(ArrayList<String> result) {
             listView.setValues(result,mMarker,mMyLocation);
             listView.update();
+            mSearching = false;
+
             View fragment = (View) findViewById(R.id.fragment1);
-            fragment.setVisibility(View.VISIBLE);
-
-
+            Button button = (Button) findViewById(R.id.gobutton);
+            if(button.getVisibility() == View.INVISIBLE) {
+                fragment.setVisibility(View.VISIBLE);
+            }
+            else {
+                fragment.setVisibility(View.INVISIBLE);
+            }
         }
     }
 
