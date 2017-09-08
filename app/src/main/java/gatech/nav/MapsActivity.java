@@ -3,6 +3,7 @@ package gatech.nav;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 
+import android.graphics.Color;
 import android.location.Location;
 import android.os.AsyncTask;
 import android.support.annotation.NonNull;
@@ -27,11 +28,13 @@ import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.BitmapDescriptorFactory;
+import com.google.android.gms.maps.model.CircleOptions;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.maps.model.Polyline;
+import com.google.android.gms.maps.model.PolylineOptions;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
@@ -48,6 +51,7 @@ import java.util.List;
 import java.util.Calendar;
 
 import static com.google.maps.android.SphericalUtil.computeHeading;
+import static gatech.nav.R.id.map;
 import static java.lang.Math.abs;
 
 import android.graphics.BitmapFactory;
@@ -85,7 +89,7 @@ public class MapsActivity extends FragmentActivity
     Marker marker;
     int threadtickscount = 0;
     private List<Marker> markerList = new ArrayList<Marker>();
-
+    private List<Marker> stationList = new ArrayList<Marker>();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -125,7 +129,7 @@ public class MapsActivity extends FragmentActivity
         // Build the map.
 
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
-                .findFragmentById(R.id.map);
+                .findFragmentById(map);
         mapView = mapFragment.getView();
         mapFragment.getMapAsync(this);
 

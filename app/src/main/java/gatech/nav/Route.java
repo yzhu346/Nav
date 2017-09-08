@@ -1,16 +1,24 @@
 package gatech.nav;
 
+import android.content.Context;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.graphics.Color;
 
 import com.google.android.gms.maps.GoogleMap;
+import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.Circle;
 import com.google.android.gms.maps.model.CircleOptions;
 import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.Marker;
+import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.maps.model.Polyline;
 import com.google.android.gms.maps.model.PolylineOptions;
 
 
+import java.util.ArrayList;
 import java.util.LinkedList;
+import java.util.List;
 
 
 /**
@@ -56,57 +64,103 @@ public class Route {
 
     private final int mWIDTH = 10;
     private final int mSTOP_RADIUS = 6;
+    private List<Marker> markerList = new ArrayList<Marker>();
 
 
     public void draw(GoogleMap map){
         clearAll();
+
             for (int i = 0; i < mExpress_Stop_Number; i++) {
                 Express_Polyline.add(map.addPolyline(Express[i]));
+
+
+                Marker marker = map.addMarker(new MarkerOptions().position(Express_stop_position.get(i))
+                        .icon(BitmapDescriptorFactory.fromResource(R.drawable.dotexpress))
+                        .title(Express_stop.get(i)));
+                markerList.add(marker);
+
+/*
                 Express_Circle.add(map.addCircle(new CircleOptions()
                         .center(Express_stop_position.get(i))
                         .radius(mSTOP_RADIUS)
                         .strokeColor(Color.WHITE)
                         .fillColor(android.graphics.Color.rgb(0x33, 0x33, 0x33))));
+*/
             }
 
 
             for (int i = 0; i < mTrolley_Stop_Number; i++) {
                 Trolley_Polyline.add(map.addPolyline(Trolley[i]));
+
+                Marker marker = map.addMarker(new MarkerOptions().position(Trolley_stop_position.get(i))
+                        .icon(BitmapDescriptorFactory.fromResource(R.drawable.dottrolley))
+                        .title(Trolley_stop.get(i)));
+                markerList.add(marker);
+
+/*
                 Trolley_Circle.add(map.addCircle(new CircleOptions()
                         .center(Trolley_stop_position.get(i))
                         .radius(mSTOP_RADIUS)
                         .strokeColor(Color.WHITE)
                         .fillColor(android.graphics.Color.rgb(0xff, 0xcc, 0x00))));
+*/
             }
 
 
             for (int i = 0; i < mBlue_Stop_Number; i++) {
                 Blue_Polyline.add(map.addPolyline(Blue[i]));
+
+                Marker marker = map.addMarker(new MarkerOptions().position(Blue_stop_position.get(i))
+                        .icon(BitmapDescriptorFactory.fromResource(R.drawable.dotblue))
+                        .title(Blue_stop.get(i)));
+                markerList.add(marker);
+
+
+/*
                 Blue_Circle.add(map.addCircle(new CircleOptions()
                         .center(Blue_stop_position.get(i))
                         .radius(mSTOP_RADIUS)
                         .strokeColor(Color.WHITE)
                         .fillColor(android.graphics.Color.rgb(0x00, 0x00, 0xff))));
+*/
             }
 
 
             for (int i = 0; i < mRed_Stop_Number; i++) {
                 Red_Polyline.add(map.addPolyline(Red[i]));
+
+                Marker marker = map.addMarker(new MarkerOptions().position(Red_stop_position.get(i))
+                        .icon(BitmapDescriptorFactory.fromResource(R.drawable.dotred))
+                        .title(Red_stop.get(i)));
+                markerList.add(marker);
+
+
+/*
                 Red_Circle.add(map.addCircle(new CircleOptions()
                         .center(Red_stop_position.get(i))
                         .radius(mSTOP_RADIUS)
                         .strokeColor(Color.WHITE)
                         .fillColor(android.graphics.Color.rgb(0xff, 0x11, 0x00))));
+*/
             }
 
 
             for (int i = 0; i < mGreen_Stop_Number; i++) {
                 Green_Polyline.add(map.addPolyline(Green[i]));
+
+                Marker marker = map.addMarker(new MarkerOptions().position(Green_stop_position.get(i))
+                        .icon(BitmapDescriptorFactory.fromResource(R.drawable.dotgreen))
+                        .title(Green_stop.get(i)));
+                markerList.add(marker);
+
+
+/*
                 Green_Circle.add(map.addCircle(new CircleOptions()
                         .center(Green_stop_position.get(i))
                         .radius(mSTOP_RADIUS)
                         .strokeColor(Color.WHITE)
                         .fillColor(android.graphics.Color.rgb(0x00, 0xcc, 0x66))));
+*/
 
         }
 
